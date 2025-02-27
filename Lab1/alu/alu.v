@@ -19,19 +19,15 @@ always @(*) begin
 
 		`FUNC_ADD : begin
 			C = A + B;
-
-			// Overflow detection in addition: if A and B same sign but sign of C different from inputs 
 			if ((A[data_width - 1] == B[data_width - 1]) && (C[data_width - 1] != A[data_width - 1]))
 				OverflowFlag = 1;
 		end
-		
 		`FUNC_SUB : begin
 			C = A - B;
-			
-			// Overflow detection in subtraction: similar logic, but consider -B instead of B
 			if ((A[data_width - 1] != B[data_width - 1]) && (C[data_width - 1] != A[data_width - 1]))
 				OverflowFlag = 1;
 		end
+
 
 		`FUNC_ID : C = A;		
 		`FUNC_NOT : C = ~A;

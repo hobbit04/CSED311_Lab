@@ -68,7 +68,7 @@ VL_INLINE_OPT void Valu___024root___ico_sequent__TOP__0(Valu___024root* vlSelf) 
         vlSelfRef.C = (0xffffU & ((IData)(vlSelfRef.A) 
                                   - (IData)(vlSelfRef.B)));
         if ((((1U & ((IData)(vlSelfRef.A) >> 0xfU)) 
-              == (1U & ((IData)(vlSelfRef.B) >> 0xfU))) 
+              != (1U & ((IData)(vlSelfRef.B) >> 0xfU))) 
              & ((1U & ((IData)(vlSelfRef.C) >> 0xfU)) 
                 != (1U & ((IData)(vlSelfRef.A) >> 0xfU))))) {
             vlSelfRef.OverflowFlag = 1U;
