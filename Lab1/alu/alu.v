@@ -7,12 +7,6 @@ module ALU #(parameter data_width = 16) (
 	input [3 : 0] FuncCode,
        	output reg [data_width - 1: 0] C,
        	output reg OverflowFlag);
-// Do not use delay in your implementation.
-
-// You can declare any variables as needed.
-/*
-	YOUR VARIABLE DECLARATION...
-*/
 
 initial begin
 	C = 0;
@@ -46,7 +40,7 @@ always @(*)
 			C = A - B;
 			
 			// Overflow detection in subtraction: similar logic, but consider -B instead of B
-			if ((A[data_width - 1] == B[data_width - 1]) && (C[data_width - 1] != A[data_width - 1]))
+			if ((A[data_width - 1] != B[data_width - 1]) && (C[data_width - 1] != A[data_width - 1]))
 				OverflowFlag = 1;
 		end
 
