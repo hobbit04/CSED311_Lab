@@ -1,22 +1,21 @@
 `include "alu_func.v"
 
-
 module ALU #(parameter data_width = 16) (
 	input [data_width - 1 : 0] A, 
 	input [data_width - 1 : 0] B, 
 	input [3 : 0] FuncCode,
-       	output reg [data_width - 1: 0] C,
-       	output reg OverflowFlag);
+    output reg [data_width - 1: 0] C,
+    output reg OverflowFlag
+);
 
 initial begin
 	C = 0;
 	OverflowFlag = 0;
 end   	
 
-always @(*) 
-	begin
-		OverflowFlag = 0;
-		case(FuncCode)
+always @(*) begin
+	OverflowFlag = 0;
+	case(FuncCode)
 
 		`FUNC_ADD : begin
 			C = A + B;
@@ -49,8 +48,8 @@ always @(*)
 		`FUNC_TCP : C = ~A + 1'b1;
 		`FUNC_ZERO : C = 0;
 		default: C = 1'b0;
-		endcase
-	end
+	endcase
+end
 
 endmodule
 
