@@ -13,16 +13,6 @@ initial begin
 	OverflowFlag = 0;
 end   	
 
-// TODO: You should implement the functionality of ALU!
-// (HINT: Use 'always @(...) begin ... end')
-/*
-	YOUR ALU FUNCTIONALITY IMPLEMENTATION...
-*/
-
-// todo: find correct operations for each function
-// todo: how to handle overflow
-// todo: make each module
-
 always @(*) 
 	begin
 		OverflowFlag = 0;
