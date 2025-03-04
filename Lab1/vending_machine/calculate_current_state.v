@@ -6,11 +6,18 @@ module calculate_current_state(i_input_coin,i_select_item,item_price,coin_value,
 input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coin,o_available_item,o_output_item);
 
 
-	
+	// input_coin = current coin input by user; return_coin = coins when returning
 	input [`kNumCoins-1:0] i_input_coin,o_return_coin;
+	
+	// select_item = current item selection by user
 	input [`kNumItems-1:0]	i_select_item;			
+
+	// item_price (0~3) : use like constants
+	// coin_value (0~2) : use like constants
 	input [31:0] item_price [`kNumItems-1:0];
-	input [31:0] coin_value [`kNumCoins-1:0];	
+	input [31:0] coin_value [`kNumCoins-1:0];
+
+	
 	input [`kTotalBits-1:0] current_total;
 	input [31:0] wait_time;
 	output reg [`kNumItems-1:0] o_available_item,o_output_item;
