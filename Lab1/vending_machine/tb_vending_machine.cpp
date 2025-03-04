@@ -215,7 +215,7 @@ int main(int argc, char** argv, char** env) {
                 break;
             case 49:
                 dut->i_input_coin = 0;
-                if (dut->o_available_item == 0b1111) { // 총 2000원 존재재
+                if (dut->o_available_item == 0b1111) { // 총 2000원 존재
                     success++;
                     printf("PASSED : available item: %d, expected 0b1111  \n", dut->o_available_item);
                 } else {
