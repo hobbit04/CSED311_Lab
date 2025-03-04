@@ -76,91 +76,80 @@ int main(int argc, char** argv, char** env) {
         switch (sim_time) {
             case 10:
                 printf("\n Available item test sim_time: %d\n", sim_time);
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 11: 
                 dut->i_input_coin = 0;
                 break;
             case 12: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 13:
-                dut->i_input_coin = 0;
+                dut->i_input_coin = 0; 
                 break;
             case 14: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 15:
                 dut->i_input_coin = 0;
                 break;
             case 16: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
 
             case 17: 
-                dut->i_input_coin = 0;
-                if (dut->o_available_item == 0b0001) {
+                dut->i_input_coin = 0; 
+                if (dut->o_available_item == 0b0001) { // 총 400원 존재
                     success++;
                     printf("PASSED : available item: %d, expected 0b0001 \n", dut->o_available_item);
                 } else {
                     printf("FAILED : available item: %d, expected 0b0001 \n", dut->o_available_item);
                 }
                 break;
-            case 18: 
-                
-                dut->i_input_coin = 1; 
+
+            case 18:                 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 19: 
                 dut->i_input_coin = 0;
-                if (dut->o_available_item == 0b0011) {
+                if (dut->o_available_item == 0b0011) { // 총 500원 존재
                     success++;
                     printf("PASSED : available item: %d, expected 0b0011 \n", dut->o_available_item);
-                    
-                    
                 } else {
                     printf("FAILED : available item: %d, expected 0b0011 \n", dut->o_available_item);
                 }
                 break;
 
             case 20:
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음 
                 break;
             case 21:
                 dut->i_input_coin = 0;
                 break;
             case 22: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음 
                 break;
             case 23:
                 dut->i_input_coin = 0;
                 break;
             case 24: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음 
                 break;
             case 25:
                 dut->i_input_coin = 0;
                 break;
             case 26: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 27:
                 dut->i_input_coin = 0;
                 break;
             case 28: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 29:
                 dut->i_input_coin = 0;
-                if (dut->o_available_item == 0b0111) {
+                if (dut->o_available_item == 0b0111) { // 총 1000원 존재
                     success++;
                     printf("PASSED : available item: %d, expected 0b0111 \n", dut->o_available_item);
                 } else {
@@ -168,75 +157,65 @@ int main(int argc, char** argv, char** env) {
                 }
                 break;
             case 30: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음 
                 break;
             case 31:
-                dut->i_input_coin = 0;  
+                dut->i_input_coin = 0;
                 break;
             case 32: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 33:
                 dut->i_input_coin = 0;  
                 break;       
             case 34: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 35:
                 dut->i_input_coin = 0;  
                 break;                  
             case 36: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 37:
                 dut->i_input_coin = 0;  
                 break;      
             case 38: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 39:
                 dut->i_input_coin = 0;  
                 break;      
             case 40: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 41:
                 dut->i_input_coin = 0;  
                 break;      
             case 42: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 43:
                 dut->i_input_coin = 0;  
                 break;      
             case 44: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 45:
                 dut->i_input_coin = 0;  
                 break;      
             case 46: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 47:
                 dut->i_input_coin = 0;  
                 break;      
             case 48: 
-                
-                dut->i_input_coin = 1; 
+                dut->i_input_coin = 1; // 100원 넣음
                 break;
             case 49:
                 dut->i_input_coin = 0;
-                if (dut->o_available_item == 0b1111) {
+                if (dut->o_available_item == 0b1111) { // 총 2000원 존재재
                     success++;
                     printf("PASSED : available item: %d, expected 0b1111  \n", dut->o_available_item);
                 } else {
@@ -256,18 +235,18 @@ int main(int argc, char** argv, char** env) {
             case 53:
                 dut->reset_n = 1;
 
-           
+
             case 54:
-                dut->i_input_coin = 0b001;
+                dut->i_input_coin = 0b001; // 100원 넣음
                 break;
             case 55:
                 dut->i_input_coin = 0;
-                dut->i_trigger_return = 1;
+                dut->i_trigger_return = 1; // 반환 요청
                 break;
 
             case 61:
-                dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b001) {
+                dut->i_trigger_return = 0; 
+                if (dut->o_return_coin == 0b001) { // 이때쯤에 100원 하나를 반환해줘야 함함
                     success++;
                     printf("PASSED : return coin: %d, expected 0b001 \n", dut->o_return_coin);
                 } else {
@@ -284,15 +263,15 @@ int main(int argc, char** argv, char** env) {
 
            
             case 64:
-                dut->i_input_coin = 0b010;
+                dut->i_input_coin = 0b010; // 500원 넣음
                 break;
             case 65:
                 dut->i_input_coin = 0;
-                dut->i_trigger_return = 1;
+                dut->i_trigger_return = 1; // 반환 요청
                 break;
             case 71:
                 dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b010) {
+                if (dut->o_return_coin == 0b010) { // 500원 반환
                     success++;
                     printf("PASSED : return coin: %d, expected 0b010 \n", dut->o_return_coin);
                 } else {
@@ -309,7 +288,7 @@ int main(int argc, char** argv, char** env) {
 
            
             case 74:
-                dut->i_input_coin = 0b100;
+                dut->i_input_coin = 0b100; // 1000원 넣음 
                 break;
             case 75:
                 dut->i_input_coin = 0;
@@ -317,7 +296,7 @@ int main(int argc, char** argv, char** env) {
                 break;
             case 81:
                 dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b100) {
+                if (dut->o_return_coin == 0b100) { // 1000원 반환
                     success++;
                     printf("PASSED : return coin: %d, expected 0b100 \n", dut->o_return_coin);
                 } else {
@@ -334,15 +313,15 @@ int main(int argc, char** argv, char** env) {
 
            
             case 84:
-                dut->i_input_coin = 0b011;
+                dut->i_input_coin = 0b011; // 600원 넣음 (한번에 ㄷㄷ)
                 break;
             case 85:
                 dut->i_input_coin = 0;
-                dut->i_trigger_return = 1;
+                dut->i_trigger_return = 1; // 반환 요청
                 break;
             case 91:
                 dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b011) {
+                if (dut->o_return_coin == 0b011) { // 500원+100원 반환 
                     success++;
                     printf("PASSED : return coin: %d, expected 0b011 \n", dut->o_return_coin);
                 } else {
@@ -356,18 +335,17 @@ int main(int argc, char** argv, char** env) {
                 break;
             case 93:
                 dut->reset_n = 1;
-
             
             case 94:
-                dut->i_input_coin = 0b101; 
+                dut->i_input_coin = 0b101; // 1100원 넣음 (한번에 ㄷㄷ)
                 break;
             case 95:
                 dut->i_input_coin = 0;
-                dut->i_trigger_return = 1;
+                dut->i_trigger_return = 1; // 반환 요청
                 break;
             case 101:
                 dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b101) {
+                if (dut->o_return_coin == 0b101) { // 1000원 + 100원 반환
                     success++;
                     printf("PASSED : return coin: %d, expected 0b101 \n", dut->o_return_coin);
                 } else {
@@ -384,7 +362,7 @@ int main(int argc, char** argv, char** env) {
 
            
             case 104:
-                dut->i_input_coin = 0b110;
+                dut->i_input_coin = 0b110; // 1500원 넣음 (한번에 ㄷㄷ)
                 break;
             case 105:
                 dut->i_input_coin = 0;
@@ -392,7 +370,7 @@ int main(int argc, char** argv, char** env) {
                 break;
             case 111:
                 dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b110) {
+                if (dut->o_return_coin == 0b110) { // 1000원 + 500원 반환
                     success++;
                     printf("PASSED : return coin: %d, expected 0b110 \n", dut->o_return_coin);
                 } else {
@@ -409,7 +387,7 @@ int main(int argc, char** argv, char** env) {
 
            
             case 114:
-                dut->i_input_coin = 0b111;
+                dut->i_input_coin = 0b111; // 1600원 넣음 (한번에 ㄷㄷ)
                 break;
             case 115:
                 dut->i_input_coin = 0;
@@ -417,7 +395,7 @@ int main(int argc, char** argv, char** env) {
                 break;
             case 121:
                 dut->i_trigger_return = 0;
-                if (dut->o_return_coin == 0b111) {
+                if (dut->o_return_coin == 0b111) { // 1000원 + 500원 + 100원 반환
                     success++;
                     printf("PASSED : return coin: %d, expected 0b111 \n", dut->o_return_coin);
                 } else {
@@ -437,17 +415,17 @@ int main(int argc, char** argv, char** env) {
                 dut->reset_n = 1;
 
             case 124:
-                dut->i_input_coin = 0b111;
+                dut->i_input_coin = 0b111; // 1600원 넣음
                 break;
             case 125:
                 dut->i_input_coin = 0;
                 break;
             case 126:
-                dut->i_select_item = 0b0110;
+                dut->i_select_item = 0b0110; // 2번, 3번 아이템 동시에 출력
                 break;
             case 127:
                 dut->i_select_item = 0b000;
-                if (dut->o_output_item == 0b0110) {
+                if (dut->o_output_item == 0b0110) { // 현재 1500원이 있으니 가능하죠!! (남는 돈 반환은 따로 체크하지 않네요)
                     success++;
                     printf("PASSED : output item: %s, expected 0b0110 \n", to_binary(dut->o_output_item));
                 } else {

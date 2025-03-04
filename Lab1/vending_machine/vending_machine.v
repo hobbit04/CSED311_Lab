@@ -31,7 +31,7 @@ module vending_machine (
 	output [`kNumItems-1:0] o_available_item;
 	output [`kNumItems-1:0] o_output_item;
 	output [`kNumCoins-1:0] o_return_coin;
-
+	
 
 	
 
