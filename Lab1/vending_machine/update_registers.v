@@ -58,7 +58,7 @@ next_money, next_item, next_change);
 					mid_change[`kNumCoins-1 - i] = 1'b0;
 				end
 			end
-			// This exists so that next_change doesn't get overwritten by 0s
+			// Used bitwise OR so that it doesn't get overwritten
 			next_change = mid_change | current_change;
 		end
 	end
@@ -67,6 +67,7 @@ next_money, next_item, next_change);
 	always @(*) begin
 		// Combinational logic for next item
 		// Assumption: always possible to dispense
+		// Used bitwise OR so that it doesn't get overwritten
 		next_item = i_select_item | current_item;
 	end
 
