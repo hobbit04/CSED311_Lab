@@ -1,8 +1,6 @@
 
 `include "vending_machine_def.v"
 
-
-
 module update_registers(i_input_coin, i_select_item, is_change, item_price, coin_value, current_money, current_item, current_change, 
 next_money, next_item, next_change);
 
@@ -27,26 +25,27 @@ next_money, next_item, next_change);
 
 	// Big assumption: the three inputs (input_coin, select_item, trigger_return) never occur simultaneously
 	
-	// Combinational logic for next money & next change
+	// Combinational logic for next_money & next_change
 	always @(*) begin
 		next_money = current_money;
 		next_change = current_change;
 		mid_change = 0;
-		// Adding logic
+
+		// Adding logic for next_money
 		if (i_input_coin != 0) begin
 			for (i = 0; i < `kNumCoins; i++) begin
 				next_money += coin_value[i] * i_input_coin[i];
 			end
 		end
 	
-		// Subtracting logic
+		// Subtracting logic for next_money
 		else if (i_select_item != 0) begin
 			for (i = 0; i < `kNumItems; i++) begin
 				next_money -= item_price[i] * i_select_item[i];
 			end
 		end
 
-		// if change is requested, next money should be 0 and change should exist
+		// if change is requested, next_money should be 0 and change should exist
 		// Assumption: money can always be represented with one of 100, 500, 1000 each
 		else if (is_change == 1) begin
 			for (i = 0; i < `kNumCoins; i++) begin
@@ -63,12 +62,10 @@ next_money, next_item, next_change);
 		end
 	end
 
-
+	// Combinational logic for next item
+	// Assumption: always possible to dispense
 	always @(*) begin
-		// Combinational logic for next item
-		// Assumption: always possible to dispense
 		// Used bitwise OR so that it doesn't get overwritten
 		next_item = i_select_item | current_item;
 	end
-
 endmodule 

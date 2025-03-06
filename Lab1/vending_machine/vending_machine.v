@@ -4,10 +4,6 @@
 //			     Jaehun Ryu (jaehunryu@postech.ac.kr) (2021.03.07)
 
 `include "vending_machine_def.v"
-`include "change_detector.v"
-`include "state_registers.v"
-`include "update_registers.v"
-`include "availability_check.v"
 
 module vending_machine (
 	clk,							// Clock signal
@@ -34,9 +30,6 @@ module vending_machine (
 	output [`kNumItems-1:0] o_available_item;
 	output [`kNumItems-1:0] o_output_item;
 	output [`kNumCoins-1:0] o_return_coin;
-	
-
-	
 
 	// Do not modify the values.
 	wire [31:0] item_price [`kNumItems-1:0];	// Price of each item
