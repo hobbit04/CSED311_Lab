@@ -26,7 +26,7 @@ module change_detector(i_input_coin, i_select_item, i_trigger_return, clk, reset
 			wait_time <= 0;
 		end
 		else if (i_input_coin != 0 || i_select_item != 0) begin
-			wait_time <= 100;
+			wait_time <= `kWaitTime;
 		end
 		else if (wait_time != 0) begin
 			wait_time <= wait_time - 1;

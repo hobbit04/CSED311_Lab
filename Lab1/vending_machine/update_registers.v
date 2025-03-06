@@ -59,7 +59,7 @@ next_money, next_item, next_change);
 				end
 			end
 			// This exists so that next_change doesn't get overwritten by 0s
-			next_change = mid_change || current_change;
+			next_change = mid_change | current_change;
 		end
 	end
 
@@ -67,7 +67,7 @@ next_money, next_item, next_change);
 	always @(*) begin
 		// Combinational logic for next item
 		// Assumption: always possible to dispense
-		next_item = i_select_item & current_item;
+		next_item = i_select_item | current_item;
 	end
 
 endmodule 
