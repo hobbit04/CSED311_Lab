@@ -54,7 +54,6 @@ module vending_machine (
 
 	
 	// Variables. You may add more your own net variables.
-	wire [`kTotalBits-1:0] input_total, output_total, return_total;
 	wire [31:0] wait_time;
 
 
