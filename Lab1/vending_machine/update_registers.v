@@ -19,7 +19,6 @@ next_money, next_item, next_change);
 	output reg [`kNumItems-1:0] next_item;
 	output reg [`kNumCoins-1:0] next_change;
 
-	reg [`kNumCoins-1:0] mid_change;
 
 	integer i;
 
@@ -29,7 +28,6 @@ next_money, next_item, next_change);
 	always @(*) begin
 		next_money = current_money;
 		next_change = current_change;
-		mid_change = 0;
 
 		// Adding logic for next_money
 		if (i_input_coin != 0) begin
@@ -51,14 +49,9 @@ next_money, next_item, next_change);
 			for (i = 0; i < `kNumCoins; i++) begin
 				if (next_money >= coin_value[`kNumCoins-1 - i]) begin
 					next_money -= coin_value[`kNumCoins-1 - i];
-					mid_change[`kNumCoins-1 - i] = 1'b1;
-				end
-				else begin
-					mid_change[`kNumCoins-1 - i] = 1'b0;
+					next_change[`kNumCoins-1 - i] = 1'b1;
 				end
 			end
-			// Used bitwise OR so that it doesn't get overwritten
-			next_change = mid_change | current_change;
 		end
 	end
 
