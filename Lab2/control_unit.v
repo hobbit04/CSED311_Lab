@@ -54,6 +54,18 @@ module control_unit(
                 pc_to_reg = 1'b1;
             end
             `ECALL : is_ecall = 1'b1;
+            default : begin
+                is_jal = 1'b0;
+                is_jalr = 1'b0;
+                branch = 1'b0;
+                mem_read = 1'b0;
+                mem_to_reg = 1'b0;
+                mem_write = 1'b0;
+                alu_src = 1'b0;
+                write_enable = 1'b0;
+                pc_to_reg = 1'b0;
+                is_ecall = 1'b0;
+            end
         endcase
     end
 endmodule

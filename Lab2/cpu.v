@@ -26,46 +26,40 @@ module cpu(input reset,                     // positive reset signal
 
   wire [31:0] instruction;
   wire [6:0] opcode;
+  wire [2:0] funct3;
+  wire [6:0] funct7;
   wire [4:0] rs1;
   wire [4:0] rs2;
   wire [4:0] rd;
-  wire [31:0] rd_data;
-  wire [10:0] alu_ctrl_input; // not sure of the bit length
-  wire [3:0] alu_op;           // not sure of the bit length
 
-  wire [31:0] rs1_data;
-  wire [31:0] rs2_data;
-
-  wire [31:0] mem_data;
-  wire [31:0] writeback_data;
-
+  wire [3:0] alu_op;
   wire [31:0] alu_in_2;
   wire [31:0] alu_result;
   wire bcond;
+
+  wire [31:0] rs1_data;
+  wire [31:0] rs2_data;
+  wire [31:0] rd_data;
+  
+  wire [31:0] mem_data;
+  wire [31:0] writeback_data;
 
   wire [31:0] current_pc;
   wire [31:0] current_pc_plus_4;
   wire [31:0] next_pc;
   wire [31:0] branch_jal_address;
 
-  wire pc_src_1;
-
   wire [31:0] immediate;
-
-  wire [2:0] funct3;
-  wire [6:0] funct7;
-
 
   /***** Register declarations *****/
   assign current_pc_plus_4 = current_pc + 4;
   assign branch_jal_address = immediate + current_pc;
 
-  assign pc_src_1 = is_jal | (bcond & branch);
-
   assign rd_data = pc_to_reg ? current_pc_plus_4 : writeback_data;
   assign alu_in_2 = alu_src ? immediate : rs2_data;
   assign writeback_data = mem_to_reg ? mem_data : alu_result;
 
+  assign is_halted = is_ecall && (print_reg[17] == 10);
 
 
   // ---------- Update program counter ----------
@@ -100,10 +94,11 @@ module cpu(input reset,                     // positive reset signal
   parse_instructions parse_inst (
     .instruction(instruction),        // input
     .opcode(opcode),                  // output
+    .funct3(funct3),                  // output
+    .funct7(funct7),                  // output
     .rs1(rs1),                        // output
     .rs2(rs2),                        // output
-    .rd(rd),                          // output
-    .alu_ctrl_input(alu_ctrl_input)   // output
+    .rd(rd)                           // output
   );
 
 
@@ -145,11 +140,18 @@ module cpu(input reset,                     // positive reset signal
 
   // ---------- ALU Control Unit ----------
   alu_control_unit alu_ctrl_unit (
+<<<<<<< HEAD
     .funct3(funct3),
     .funct7(funct7),
     .opcode(opcode),    // input
     .alu_op(alu_op)                 // output
   
+=======
+    .funct3(funct3),                  // input
+    .funct7(funct7),                  // input
+    .opcode(opcode),                  // input
+    .alu_op(alu_op)                   // output
+>>>>>>> refs/remotes/origin/main
   );
 
   // ---------- ALU ----------
