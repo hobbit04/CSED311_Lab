@@ -3,7 +3,7 @@
 module alu (input [3:0] alu_op,  
             input [31:0] alu_in_1,
             input [31:0] alu_in_2,
-            output [31:0] alu_result,
+            output reg [31:0] alu_result,
             output reg alu_bcond);
 
     always @(*) begin
@@ -11,7 +11,7 @@ module alu (input [3:0] alu_op,
             `FUNC_ADD : alu_result = alu_in_1 + alu_in_2;
             `FUNC_SUB : begin
                 alu_result = alu_in_1 - alu_in_2;
-                alu_bcond = (alu_in_1 < alu_in_2);
+                // alu_bcond = (alu_in_1 < alu_in_2);
             end
             // `FUNC_ID : alu_result = alu_in_1;		
             // `FUNC_NOT : alu_result = alu_in_1;
@@ -27,6 +27,8 @@ module alu (input [3:0] alu_op,
             `FUNC_ARS : alu_result = alu_in_1 >>> 1'b1;
             // `FUNC_TCP : alu_result = alu_in_1 + 1'b1;
             `FUNC_ZERO : alu_result = 0;
+            default : alu_result = 0;
         endcase
+        alu_bcond = 0;
     end
 endmodule

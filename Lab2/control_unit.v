@@ -12,7 +12,7 @@ module control_unit(
     output reg write_enable,
     output reg pc_to_reg,
     output reg is_ecall
-    )
+    );
 
    always @(*) begin
         is_jal = 1'b0;
