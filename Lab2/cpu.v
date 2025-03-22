@@ -59,6 +59,7 @@ module cpu(input reset,                     // positive reset signal
   assign alu_in_2 = alu_src ? immediate : rs2_data;
   assign writeback_data = mem_to_reg ? mem_data : alu_result;
 
+  assign is_halted = is_ecall && (print_reg[17] == 10);
 
 
   // ---------- Update program counter ----------
