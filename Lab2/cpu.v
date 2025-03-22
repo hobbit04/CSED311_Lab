@@ -140,18 +140,10 @@ module cpu(input reset,                     // positive reset signal
 
   // ---------- ALU Control Unit ----------
   alu_control_unit alu_ctrl_unit (
-<<<<<<< HEAD
-    .funct3(funct3),
-    .funct7(funct7),
-    .opcode(opcode),    // input
-    .alu_op(alu_op)                 // output
-  
-=======
     .funct3(funct3),                  // input
     .funct7(funct7),                  // input
     .opcode(opcode),                  // input
     .alu_op(alu_op)                   // output
->>>>>>> refs/remotes/origin/main
   );
 
   // ---------- ALU ----------
