@@ -5,6 +5,7 @@ module alu_control_unit(
     input [6:0] opcode,
     output reg [3:0] alu_op
 );
+
     always @(*) begin
         case(opcode) 
             `ARITHMETIC : begin 
@@ -38,10 +39,10 @@ module alu_control_unit(
             end
             `BRANCH : begin 
                 case(funct3)
-                    `FUNCT3_BEQ : alu_op = `FUNC_SUB;
-                    `FUNCT3_BNE : alu_op = `FUNC_SUB;
-                    `FUNCT3_BLT : alu_op = `FUNC_SUB;
-                    `FUNCT3_BGE : alu_op = `FUNC_SUB;
+                    `FUNCT3_BEQ : alu_op = `FUNC_BEQ;
+                    `FUNCT3_BNE : alu_op = `FUNC_BNE;
+                    `FUNCT3_BLT : alu_op = `FUNC_BLT;
+                    `FUNCT3_BGE : alu_op = `FUNC_BGE;
                     default : alu_op = `FUNC_ZERO;
                 endcase
             end

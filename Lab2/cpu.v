@@ -148,13 +148,13 @@ module cpu(input reset,                     // positive reset signal
     .funct3(funct3),
     .funct7(funct7),
     .opcode(opcode),    // input
-    .alu_op(alu_op)                   // output
+    .alu_op(alu_op)                 // output
+  
   );
 
   // ---------- ALU ----------
   alu alu (
     .alu_op(alu_op),                // input
-    .funct3(funct3),                // input
     .alu_in_1(rs1_data),            // input  
     .alu_in_2(alu_in_2),            // input
     .alu_result(alu_result),        // output
