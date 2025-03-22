@@ -50,7 +50,7 @@ module cpu(input reset,                     // positive reset signal
 
   // ---------- Control Unit ----------
   control_unit ctrl_unit (
-    .part_of_inst(),  // input
+    .opcode(),        // input
     .is_jal(),        // output
     .is_jalr(),       // output
     .branch(),        // output
