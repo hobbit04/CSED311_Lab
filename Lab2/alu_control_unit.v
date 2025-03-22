@@ -7,7 +7,7 @@ module alu_control_unit(
 );
     always @(*) begin
         case(opcode) 
-            `ARITHMETIC : begin :gen_r_type
+            `ARITHMETIC : begin 
                 case(funct3) 
                     `FUNCT3_ADD : alu_op = (funct7 == `FUNCT7_SUB) ? `FUNC_SUB : `FUNC_ADD;
                     `FUNCT3_SLL : alu_op = `FUNC_LLS;
@@ -18,7 +18,7 @@ module alu_control_unit(
                     default : alu_op = `FUNC_ZERO;
                 endcase
             end
-            `ARITHMETIC_IMM : begin : gen_i_type
+            `ARITHMETIC_IMM : begin 
                 case(funct3)
                     `FUNCT3_ADD : alu_op = `FUNC_ADD;
                     `FUNCT3_SLL : alu_op = `FUNC_LLS;
@@ -29,14 +29,14 @@ module alu_control_unit(
                     default : alu_op = `FUNC_ZERO;
                 endcase
             end
-            `LOAD, `STORE, `JALR, `JAL: begin : gen_lsj_type
+            `LOAD, `STORE, `JALR, `JAL: begin 
                 assign alu_op = `FUNC_ADD;
                 // case(FUNCT3)
                 //     `FUNCT3_LW : alu_op = `FUNC_ADD;
                 //     `FUNCT3_SW : alu_op = `FUNC_ADD;
                 // endcase
             end
-            `BRANCH : begin : gen_branch_type
+            `BRANCH : begin 
                 case(funct3)
                     `FUNCT3_BEQ : alu_op = `FUNC_SUB;
                     `FUNCT3_BNE : alu_op = `FUNC_SUB;

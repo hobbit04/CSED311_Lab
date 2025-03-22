@@ -1,6 +1,7 @@
 `include "alu_func.v"
 
 module alu (input [3:0] alu_op,  
+            input [2:0] funct3,
             input [31:0] alu_in_1,
             input [31:0] alu_in_2,
             output reg [31:0] alu_result,
@@ -11,7 +12,13 @@ module alu (input [3:0] alu_op,
             `FUNC_ADD : alu_result = alu_in_1 + alu_in_2;
             `FUNC_SUB : begin
                 alu_result = alu_in_1 - alu_in_2;
-                // alu_bcond = (alu_in_1 < alu_in_2);
+                case(funct3)
+                    `FUNCT3_BEQ : alu_bcond = (alu_in_1 == alu_in_2);
+                    `FUNCT3_BNE : alu_bcond = (alu_in_1 != alu_in_2);
+                    `FUNCT3_BLT : alu_bcond = ($signed(alu_in_1) < $signed(alu_in_2));
+                    `FUNCT3_BGE : alu_bcond = ($signed(alu_in_1) >= $signed(alu_in_2));
+                    default : alu_bcond = 0;
+                endcase
             end
             // `FUNC_ID : alu_result = alu_in_1;		
             // `FUNC_NOT : alu_result = alu_in_1;
