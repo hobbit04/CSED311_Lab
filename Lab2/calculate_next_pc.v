@@ -15,7 +15,7 @@ module calculate_next_pc(
             next_pc = jalr_address;
         end
 
-        else if ((branch & bcond) || is_jal) begin
+        else if (branch && bcond || is_jal) begin // Fix condition
             next_pc = branch_jal_address;
         end
     end

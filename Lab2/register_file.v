@@ -19,12 +19,10 @@ module register_file(input  reset,
   
   assign rs1_dout = rf[rs1];
   assign rs2_dout = rf[rs2];
-  
-
 
   // Synchronously write data to the register file
   always @(posedge clk) begin
-    if(write_enable) 
+    if (write_enable && rd != 5'b00000) // Prevent writing to x0
       rf[rd] <= rd_din;
     
   end
