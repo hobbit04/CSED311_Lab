@@ -40,7 +40,8 @@ module cpu(input reset,                     // positive reset signal
   wire [31:0] rs1_data;
   wire [31:0] rs2_data;
   wire [31:0] rd_data;
-  
+  wire ecall_reg_cond;
+
   wire [31:0] mem_data;
   wire [31:0] writeback_data;
 
@@ -51,7 +52,7 @@ module cpu(input reset,                     // positive reset signal
 
   wire [31:0] immediate;
 
-  /***** Register declarations *****/
+  /***** Simple muxes and adders *****/
   assign current_pc_plus_4 = current_pc + 4;
   assign branch_jal_address = immediate + current_pc;
 
@@ -59,7 +60,7 @@ module cpu(input reset,                     // positive reset signal
   assign alu_in_2 = alu_src ? immediate : rs2_data;
   assign writeback_data = mem_to_reg ? mem_data : alu_result;
 
-  assign is_halted = is_ecall && (print_reg[17] == 10);
+  assign is_halted = is_ecall && ecall_reg_cond;
 
 
   // ---------- Update program counter ----------
@@ -104,16 +105,17 @@ module cpu(input reset,                     // positive reset signal
 
   // ---------- Register File ----------
   register_file reg_file (
-    .reset (reset),                 // input
-    .clk (clk),                     // input
-    .rs1 (rs1),                     // input
-    .rs2 (rs2),                     // input
-    .rd (rd),                       // input
-    .rd_din (rd_data),              // input
-    .write_enable (write_enable),   // input
-    .rs1_dout (rs1_data),           // output
-    .rs2_dout (rs2_data),           // output
-    .print_reg (print_reg)          // DO NOT TOUCH THIS
+    .reset (reset),                     // input
+    .clk (clk),                         // input
+    .rs1 (rs1),                         // input
+    .rs2 (rs2),                         // input
+    .rd (rd),                           // input
+    .rd_din (rd_data),                  // input
+    .write_enable (write_enable),       // input
+    .ecall_reg_cond (ecall_reg_cond),   // output
+    .rs1_dout (rs1_data),               // output
+    .rs2_dout (rs2_data),               // output
+    .print_reg (print_reg)              // DO NOT TOUCH THIS
   );
 
 

@@ -5,6 +5,7 @@ module register_file(input  reset,
                      input [4:0] rd,           // destination register
                      input [31:0] rd_din,      // input data for rd
                      input write_enable,       // RegWrite signal
+                     output ecall_reg_cond,    // check if x17 == 10
                      output [31:0] rs1_dout,   // output of rs 1
                      output [31:0] rs2_dout,   // output of rs 2
                      output [31:0] print_reg [0:31]);
@@ -16,7 +17,7 @@ module register_file(input  reset,
 
   // TODO
   // Asynchronously read register file
-  
+  assign ecall_reg_cond = rf[17] == 10 ? 1 : 0;
   assign rs1_dout = rf[rs1];
   assign rs2_dout = rf[rs2];
 
