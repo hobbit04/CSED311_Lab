@@ -32,10 +32,6 @@ module alu_control_unit(
             end
             `LOAD, `STORE, `JALR, `JAL: begin 
                 alu_op = `FUNC_ADD;
-                // case(FUNCT3)
-                //     `FUNCT3_LW : alu_op = `FUNC_ADD;
-                //     `FUNCT3_SW : alu_op = `FUNC_ADD;
-                // endcase
             end
             `BRANCH : begin 
                 case(funct3)

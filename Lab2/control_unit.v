@@ -54,11 +54,7 @@ module control_unit(
                 pc_to_reg = 1'b1;
             end
             `ECALL : is_ecall = 1'b1;
-            // `LUI : write_enable = 1'b1; // Add support for LUI
-            // `AUIPC : begin
-            //     alu_src = 1'b1;
-            //     write_enable = 1'b1;
-            // end
+            
             default : begin
                 is_jal = 1'b0;
                 is_jalr = 1'b0;
