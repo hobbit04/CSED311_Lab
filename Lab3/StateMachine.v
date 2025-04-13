@@ -1,8 +1,7 @@
 `include "opcodes.v"
-module calculate_next_state(
-    input [3:0] state,  // prev cycle's next_state
+module StateMachine(
     input [6:0] opcode,
-    input [1:0] AddrCtrl,
+    input [3:0] current_state,
     output reg [3:0] next_state
 );
     

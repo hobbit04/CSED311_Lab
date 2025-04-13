@@ -1,17 +1,18 @@
 module StateToControl(
-    input [3:0] state,
-    output ALUSrcA,
-    output IorD,
-    output IRWrite,
-    output PCSource,
-    output PCWrite,
+    input [3:0] current_state,
     output PCWriteNotCond,
+    output PCWrite,
+    output IorD,
     output MemRead,
     output MemWrite,
     output MemtoReg,
-    output RegWrite,
+    output IRWrite,
+    output PCSource,
     output [1:0] ALUOp,
-    output [1:0] ALUSrcB
+    output [1:0] ALUSrcB,
+    output ALUSrcA,
+    output RegWrite,
+    output is_ecall
     );
 
     // combinational logic to determine 
@@ -21,7 +22,7 @@ module StateToControl(
         IRWrite = 0;
         PCSource = 0;
         PCWrite = 0;
-        PCWriteNotCond = 0;
+        PCWriteCond = 0;
         MemRead = 0;
         MemWrite = 0;
         MemtoReg = 0;
@@ -41,12 +42,14 @@ module StateToControl(
                 PCWrite = 1;
                 PCSource = 0;
             end
+
             // Instruction decode / register fetch
             4'b0001: begin
                 ALUSrcA = 0;
                 ALUSrcB = 2'b10;
                 ALUOp = 2'b00;
             end
+            
             // Memory address computation
             4'b0010: begin
                 ALUSrcA = 1;

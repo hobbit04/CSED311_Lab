@@ -50,6 +50,7 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] alu_result;
   wire alu_bcond;
 
+  assign next_pc = PCSource ? ALUOut : alu_result;
   assign addr = IorD ? ALUOut : current_pc;
   assign WriteData = MemToReg ? MDR : ALUOut;
   assign alu_in_1 = ALUSrcA ? A : current_pc;
@@ -112,19 +113,21 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Control Unit ----------
   ControlUnit ctrl_unit(
-    .part_of_inst(IR[6:0]),             // input
-    .PCWriteNotCond(PCWriteNotCond);    // output
-    .PCWrite(PCWrite);                  // output
-    .IorD(IorD);                        // output
-    .MemRead(MemRead);                  // output
-    .MemWrite(MemWrite);                // output
-    .MemtoReg(MemtoReg);                // output
-    .IRWrite(IRWrite);                  // output
-    .PCSource(PCSource);                // output
-    .ALUOp(ALUOp);                      // output
-    .ALUSrcB(ALUSrcB);                  // output
-    .ALUSrcA(ALUSrcA);                  // output
-    .RegWrite(RegWrite);                // output
+    .reset(reset),                      // input
+    .clk(clk),                          // input
+    .opcode(IR[6:0]),                   // input
+    .PCWriteNotCond(PCWriteNotCond),    // output
+    .PCWrite(PCWrite),                  // output
+    .IorD(IorD),                        // output
+    .MemRead(MemRead),                  // output
+    .MemWrite(MemWrite),                // output
+    .MemtoReg(MemtoReg),                // output
+    .IRWrite(IRWrite),                  // output
+    .PCSource(PCSource),                // output
+    .ALUOp(ALUOp),                      // output
+    .ALUSrcB(ALUSrcB),                  // output
+    .ALUSrcA(ALUSrcA),                  // output
+    .RegWrite(RegWrite),                // output
     .is_ecall()                         // output (ecall inst)
   );
 
