@@ -1,4 +1,6 @@
 `include "opcodes.v"
+`include "states.v"
+
 module StateMachine(
     input [6:0] opcode,
     input [3:0] current_state,
@@ -6,24 +8,37 @@ module StateMachine(
 );
     
     always @(*) begin
-        case(AddrCtrl)
-            2'b00: next_state = 0;
-            2'b01: begin
-                case(opcode)
-                    `ARITHMETIC: next_state = 6;
-                    `BRANCH: next_state = 8;
-                    `LOAD, `STORE: next_state = 2;
-                endcase
+        case(current_state)
+            `IF: next_state = `ID;
+            `ID: case(opcode)
+                `ARITHMETIC: next_state = `EX_R;
+                `ARITHMETIC_IMM: next_state = `EX_IALU;
+                `LOAD: next_state = `EX_LDSD;
+                `STORE: next_state = `EX_LDSD;
+                `BRANCH: next_state = `EX_B1;
+                `JAL: next_state = `EX_JAL;
+                `JALR: next_state = `EX_JALR;
+                default: next_state = `IF;
+            endcase
+
+            `EX_R: next_state = `WB_ALU;
+            `EX_IALU: next_state = `WB_ALU;
+            `WB_ALU: next_state = `ID;
+
+            `EX_LDSD: if(opcode == `LOAD) begin
+                next_state = `MEM_LD;
             end
-            2'b10: begin
-                case(opcode)
-                    `LOAD: next_state = 3;
-                    `STORE: next_state = 5;
-                endcase
+            else begin
+                next_state = `MEM_SD;
             end
-            2'b11: begin
-                next_state = state + 1;
-            end
+            `MEM_LD: next_state = `WB_LD;
+            `WB_LD: next_state = `IF;
+            `MEM_SD: next_state = `IF;
+            `EX_B1: // if not branch condition go to IF, else go to EX_B2
+            `EX_B2: next_state = `IF;
+            `EX_JAL: next_state = `IF;
+            `EX_JALR: next_state = `IF;
+            default: next_state = `IF;
         endcase
     end
 endmodule

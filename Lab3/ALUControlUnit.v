@@ -1,7 +1,7 @@
 module ALUControlUnit(
     input [3:0] part_of_inst,     // From instruction register
     input [1:0] ALUOp,            // From control unit
-    output reg [3:0] ALUControl  // To ALU
+    output reg [3:0] ALUControl   // To ALU
 );
     // Functionality
     // ALUOp = 00 then addition.

@@ -18,11 +18,14 @@ module ControlUnit(
 );
     // We will implement the "MicroSequencer: ver 1.0" in the lecture notes
     // Because each stage has just one cycle, not many redundant cells
+    // Also, we will design Moore machine for simplicity
 
     reg [3:0] current_state;
     wire [3:0] next_state;
 
-// combinationally get control values from state
+    assign is_ecall = (opcode == 7'b1110011);
+
+    // combinationally get control values from state
     StateToControl state_to_control(
         .current_state(current_state),          // input
         .PCWriteNotCond(PCWriteNotCond),        // output
@@ -37,7 +40,6 @@ module ControlUnit(
         .ALUSrcB(ALUSrcB),                      // output
         .ALUSrcA(ALUSrcA),                      // output
         .RegWrite(RegWrite),                    // output
-        .is_ecall(is_ecall)                     // output
     );
 
 

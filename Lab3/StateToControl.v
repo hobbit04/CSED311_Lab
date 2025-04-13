@@ -11,8 +11,7 @@ module StateToControl(
     output [1:0] ALUOp,
     output [1:0] ALUSrcB,
     output ALUSrcA,
-    output RegWrite,
-    output is_ecall
+    output RegWrite
     );
 
     // combinational logic to determine 

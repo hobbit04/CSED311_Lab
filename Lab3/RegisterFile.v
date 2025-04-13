@@ -5,10 +5,14 @@ module RegisterFile(input	reset,
                     input [4:0] rd,           // destination register
                     input [31:0] rd_din,      // input data for rd
                     input write_enable,       // RegWrite signal
+                    output ecall_reg_cond,    // check if x17 == 10
                     output [31:0] rs1_dout,   // output of rs 1
                     output [31:0] rs2_dout,
                     output [31:0] print_reg[0:31]);  // output of rs 2
   integer i;
+
+  assign ecall_reg_cond = rf[17] == 10 ? 1 : 0;
+
   // Register file
   reg [31:0] rf[0:31];
   assign print_reg = rf;

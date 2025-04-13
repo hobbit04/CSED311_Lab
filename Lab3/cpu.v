@@ -43,13 +43,16 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] next_pc;
   wire [31:0] addr;
 
-
   wire [31:0] alu_in_1;
   wire [31:0] alu_in_2;
   wire [3:0] ALUControl;
   wire [31:0] alu_result;
   wire alu_bcond;
 
+  wire is_ecall;
+  wire ecall_reg_cond;
+
+  assign is_halted = is_ecall && ecall_reg_cond;
   assign next_pc = PCSource ? ALUOut : alu_result;
   assign addr = IorD ? ALUOut : current_pc;
   assign WriteData = MemToReg ? MDR : ALUOut;
@@ -88,16 +91,17 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Register File ----------
   RegisterFile reg_file(
-    .reset(reset),              // input
-    .clk(clk),                  // input
-    .rs1(IR[19:15]),            // input
-    .rs2(IR[24:20]),            // input
-    .rd(IR[11:7]),              // input
-    .rd_din(WriteData),         // input
-    .write_enable(RegWrite),    // input
-    .rs1_dout(regA_value),      // output
-    .rs2_dout(regB_value),      // output
-    .print_reg(print_reg)       // output (TO PRINT REGISTER VALUES IN TESTBENCH)
+    .reset(reset),                    // input
+    .clk(clk),                        // input
+    .rs1(IR[19:15]),                  // input
+    .rs2(IR[24:20]),                  // input
+    .rd(IR[11:7]),                    // input
+    .rd_din(WriteData),               // input
+    .write_enable(RegWrite),          // input
+    .ecall_reg_cond(ecall_reg_cond)   // output (ecall check)
+    .rs1_dout(regA_value),            // output
+    .rs2_dout(regB_value),            // output
+    .print_reg(print_reg)             // output (TO PRINT REGISTER VALUES IN TESTBENCH)
   );
 
   // ---------- Memory ----------
@@ -128,7 +132,7 @@ module cpu(input reset,       // positive reset signal
     .ALUSrcB(ALUSrcB),                  // output
     .ALUSrcA(ALUSrcA),                  // output
     .RegWrite(RegWrite),                // output
-    .is_ecall()                         // output (ecall inst)
+    .is_ecall(is_ecall)                 // output (ecall inst)
   );
 
   // ---------- Immediate Generator ----------
