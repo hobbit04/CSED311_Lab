@@ -1,6 +1,6 @@
 `include "alu_func.v"
 
-module alu (input [3:0] alu_op,  
+module ALU (input [3:0] ALUControl,  
             input [31:0] alu_in_1,
             input [31:0] alu_in_2,
             output reg [31:0] alu_result,
@@ -9,7 +9,7 @@ module alu (input [3:0] alu_op,
     always @(*) begin
         alu_result = 32'b0;
         alu_bcond  = 1'b0;
-        case(alu_op) 
+        case(ALUControl)
             `FUNC_ADD : alu_result = alu_in_1 + alu_in_2;
             `FUNC_SUB : alu_result = alu_in_1 - alu_in_2;
             `FUNC_BEQ : alu_bcond = (alu_in_1 == alu_in_2); 

@@ -1,9 +1,12 @@
 module ALUControlUnit(
-    input [1:0] ALUOp,  // From control unit
-    input [5:0] funct,  // From instruction register
+    input [3:0] part_of_inst,     // From instruction register
+    input [1:0] ALUOp,            // From control unit
     output reg [3:0] ALUControl  // To ALU
 );
-    
+    // Functionality
+    // ALUOp = 00 then addition.
+    // ALUOp = 01 then subtraction.
+    // ALUOp = 10 then do what funct tells us to.  
     always @(*) begin
         ALUControl = 4'b0000;
         

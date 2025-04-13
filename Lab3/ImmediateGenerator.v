@@ -1,8 +1,8 @@
 `include "opcodes.v"
 
-module immediate_generator(
+module ImmediateGenerator(
     input [31:0] IR,
-    output reg [31:0] imm_gen_out  // Should be 64 or 32 bits? Not sure yet..
+    output reg [31:0] imm_gen_out
     );
 
     wire [6:0] opcode = IR[6:0];
