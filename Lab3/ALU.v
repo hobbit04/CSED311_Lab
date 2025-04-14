@@ -1,6 +1,6 @@
 `include "opcodes.v"
 
-module ALU (input [4:0] ALUControl,  
+module ALU (input [5:0] ALUControl,  // (imm?), (branch?), (funct7's minus bit), (funct3)
             input [31:0] alu_in_1,
             input [31:0] alu_in_2,
             output reg [31:0] alu_result,
@@ -25,18 +25,18 @@ module ALU (input [4:0] ALUControl,
         else begin
             case (ALUControl[2:0])
                 `FUNCT3_ADD: begin
-                    if (ALUControl[3] == 0) begin
+                    if (ALUControl[5] == 1 || ALUControl[3] == 0) begin
                         alu_result = alu_in_1 + alu_in_2;
                     end
                     else begin
                         alu_result = alu_in_1 - alu_in_2;
                     end
                 end
-                `FUNCT3_SLL: alu_result = alu_in_1 << alu_in_2;
+                `FUNCT3_SLL: alu_result = alu_in_1 << alu_in_2[4:0];
                 `FUNCT3_XOR: alu_result = alu_in_1 ^ alu_in_2;
                 `FUNCT3_OR: alu_result = alu_in_1 | alu_in_2;
                 `FUNCT3_AND: alu_result = alu_in_1 & alu_in_2;
-                `FUNCT3_SRL: alu_result = alu_in_1 >> alu_in_2;
+                `FUNCT3_SRL: alu_result = alu_in_1 >> alu_in_2[4:0];
                 default: ;
             endcase
         end

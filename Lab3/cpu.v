@@ -45,7 +45,7 @@ module cpu(input reset,       // positive reset signal
 
   wire [31:0] alu_in_1;
   wire [31:0] alu_in_2;
-  wire [4:0] ALUControl;
+  wire [5:0] ALUControl;
   wire [31:0] alu_result;
   wire alu_bcond;
 
@@ -148,6 +148,7 @@ module cpu(input reset,       // positive reset signal
   ALUControlUnit alu_ctrl_unit(
     .functs({IR[30], IR[14:12]}),         // input
     .ALUOp(ALUOp),                        // input
+    .opcode(IR[6:0]),                     // input
     .ALUControl(ALUControl)               // output
   );
 
