@@ -20,7 +20,7 @@ module ALUControlUnit(
                     `FUNCT3_BNE: ALUControl = `FUNC_BNE;
                     `FUNCT3_BLT: ALUControl = `FUNC_BLT;
                     `FUNCT3_BGE: ALUControl = `FUNC_BGE;
-                    default: ; 
+                    default: ALUControl = 4'b0000;
                 endcase
             end
             2'b10: begin
