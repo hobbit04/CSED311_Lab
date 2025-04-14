@@ -25,8 +25,8 @@ module Memory #(parameter MEM_DEPTH = 16384) (input reset,
         /* verilator lint_on BLKSEQ */
         // DO NOT TOUCH COMMENT ABOVE
       // Provide path of the file including instructions with binary format
-      // $readmemh("/home/daniel/CSED311_Lab/Lab3/student_tb/basic_mem.txt", mem);
-      $readmemh("/home/daniel/CSED311_Lab/Lab3/student_tb/non-controlflow_mem.txt", mem);
+      // $readmemh("/Users/dltjdwo/Documents/Postech/csed311/CSED311_Lab/Lab3/student_tb/basic_mem.txt", mem);
+      $readmemh("/Users/dltjdwo/Documents/Postech/csed311/CSED311_Lab/Lab3/student_tb/non-controlflow_mem.txt", mem);
       // $readmemh("/home/daniel/CSED311_Lab/Lab3/student_tb/loop_mem.txt", mem);
       // $readmemh("/home/daniel/CSED311_Lab/Lab3/student_tb/ifelse_mem.txt", mem);
       // $readmemh("/home/daniel/CSED311_Lab/Lab3/student_tb/recursive_mem.txt", mem);
