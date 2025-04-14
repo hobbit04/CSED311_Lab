@@ -1,72 +1,171 @@
+`include "states.v"
+
 module StateToControl(
     input [3:0] current_state,
-    output PCWriteNotCond,
-    output PCWrite,
-    output IorD,
-    output MemRead,
-    output MemWrite,
-    output MemtoReg,
-    output IRWrite,
-    output PCSource,
-    output [1:0] ALUOp,
-    output [1:0] ALUSrcB,
-    output ALUSrcA,
-    output RegWrite
+    output reg PCWriteCond,
+    output reg PCWrite,
+    output reg IorD,
+    output reg MemRead,
+    output reg MemWrite,
+    output reg MemtoReg,
+    output reg IRWrite,
+    output reg PCSource,
+    output reg [1:0] ALUOp,
+    output reg [1:0] ALUSrcB,
+    output reg ALUSrcA,
+    output reg RegWrite
     );
 
-    // combinational logic to determine 
-    always (*) begin
-        ALUSrcA = 0;
-        IorD = 0;
-        IRWrite = 0;
-        PCSource = 0;
-        PCWrite = 0;
+    // combinational logic to determine control based on state
+    always @(*) begin
         PCWriteCond = 0;
+        PCWrite = 0;
+        IorD = 0;
         MemRead = 0;
         MemWrite = 0;
         MemtoReg = 0;
-        RegWrite = 0;
+        IRWrite = 0;
+        PCSource = 0;
         ALUOp = 2'b00;
         ALUSrcB = 2'b00;
+        ALUSrcA = 0;
+        RegWrite = 0;
 
-        case(state)
-            // Instruction Fetch
-            4'b0000: begin
-                MemRead = 1;
-                ALUSrcA = 0;
+        case(current_state)
+            // IR <- MEM[PC]
+            `IF: begin
                 IorD = 0;
+                MemRead = 1;
                 IRWrite = 1;
-                ALUSrcB = 2'b01;
-                ALUOp = 2'b00;
-                PCWrite = 1;
-                PCSource = 0;
             end
 
-            // Instruction decode / register fetch
-            4'b0001: begin
+            // A <- RF[rs1(IR)]
+            // B <- RF[rs2(IR)]
+            // ALUOut <- PC+4
+            `ID: begin
                 ALUSrcA = 0;
-                ALUSrcB = 2'b10;
+                ALUSrcB = 2'b01;
                 ALUOp = 2'b00;
             end
             
-            // Memory address computation
-            4'b0010: begin
+            // ALUOut <- A op B
+            `EX_R: begin
+                ALUSrcA = 1;
+                ALUSrcB = 2'b00;
+                ALUOp = 2'b10;
+            end
+
+            // ALUOut <- A op imm
+            `EX_IALU: begin
+                ALUSrcA = 1;
+                ALUSrcB = 2'b10;
+                ALUOp = 2'b10;
+            end
+
+            // RF[rd(IR)] <- ALUOut
+            // PC <- PC + 4
+            `WB_ALU: begin
+                MemtoReg = 0;
+                RegWrite = 1;
+
+                ALUSrcA = 0;
+                ALUSrcB = 2'b01;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;
+            end
+            
+            // ALUOut <- A + imm
+            `EX_LDSD: begin
                 ALUSrcA = 1;
                 ALUSrcB = 2'b10;
                 ALUOp = 2'b00;
             end
-            // Memory access
-            4'b0011: begin
-                MemRead = 1;
+
+            // MDR <- MEM[ALUOut]
+            `MEM_LD: begin
                 IorD = 1;
+                MemRead = 1;
             end
-            // Write-back step
-            4'b0100: begin
-                RegD
+
+            // RF[rd(IR)] <- MDR
+            // PC <- PC + 4
+            `WB_LD: begin
+                MemtoReg = 1;
+                RegWrite = 1;
+
+                ALUSrcA = 0;
+                ALUSrcB = 2'b01;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;                
             end
-            4'b0101:
 
+            // MEM[ALUOut] <- B
+            // PC <- PC + 4
+            `MEM_SD: begin
+                IorD = 1;
+                MemWrite = 1;
 
+                ALUSrcA = 0;
+                ALUSrcB = 2'b01;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;
+            end
+
+            // RF[rd(IR)] <- ALUOut
+            // PC <- PC + imm
+            `EX_JAL: begin
+                MemtoReg = 0;
+                RegWrite = 1;
+
+                ALUSrcA = 0;
+                ALUSrcB = 2'b10;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;
+            end
+
+            // RF[rd(IR)] <- ALUOut
+            // PC <- A + imm
+            `EX_JALR: begin
+                MemtoReg = 0;
+                RegWrite = 1;
+
+                ALUSrcA = 1;
+                ALUSrcB = 2'b10;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;
+            end
+
+            // A <- RF[rs1(IR)]
+            // B <- RF[rs2(IR)]
+            // PC <- PC + 4
+            `ID_B: begin
+                ALUSrcA = 0;
+                ALUSrcB = 2'b01;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;
+            end
+
+            /*****NOT DONE FROM BELOW*****/
+            // ALUOut <- PC + imm
+            `EX_B1: begin
+                ALUSrcA = 0;
+                ALUSrcB = 2'b10;
+                ALUOp = 2'b00;
+            end
+
+            `EX_B2: begin
+                ALUSrcA = 1;
+                ALUSrcB = 2'b00;
+                ALUOp = 2'b01;
+            end
+
+            default: ;
         endcase
     end
 

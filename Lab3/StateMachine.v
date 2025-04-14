@@ -9,13 +9,18 @@ module StateMachine(
     
     always @(*) begin
         case(current_state)
-            `IF: next_state = `ID;
+            `IF: if(opcode == `BRANCH) begin
+                next_state = `ID_B;
+            end
+            else begin
+                next_state = `ID;
+            end
+
             `ID: case(opcode)
                 `ARITHMETIC: next_state = `EX_R;
                 `ARITHMETIC_IMM: next_state = `EX_IALU;
                 `LOAD: next_state = `EX_LDSD;
                 `STORE: next_state = `EX_LDSD;
-                `BRANCH: next_state = `EX_B1;
                 `JAL: next_state = `EX_JAL;
                 `JALR: next_state = `EX_JALR;
                 default: next_state = `IF;
@@ -34,8 +39,13 @@ module StateMachine(
             `MEM_LD: next_state = `WB_LD;
             `WB_LD: next_state = `IF;
             `MEM_SD: next_state = `IF;
-            `EX_B1: // if not branch condition go to IF, else go to EX_B2
+            
+            /*
+            `ID_B: next_state = `EX_B1;
+            `EX_B1: next_state = `EX_B2;
             `EX_B2: next_state = `IF;
+            */
+            
             `EX_JAL: next_state = `IF;
             `EX_JALR: next_state = `IF;
             default: next_state = `IF;

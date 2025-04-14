@@ -25,7 +25,7 @@ module Memory #(parameter MEM_DEPTH = 16384) (input reset,
         /* verilator lint_on BLKSEQ */
         // DO NOT TOUCH COMMENT ABOVE
       // Provide path of the file including instructions with binary format
-      $readmemh("/path/to/instruction_file", mem);
+      $readmemh("/home/daniel/CSED311_Lab/Lab3/student_tb/basic_mem.txt", mem);
     end
 
     // Synchronously write data to the memory

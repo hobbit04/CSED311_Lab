@@ -2,7 +2,7 @@ module ControlUnit(
     input reset,
     input clk,
     input [6:0] opcode,
-    output PCWriteNotCond,
+    output PCWriteCond,
     output PCWrite,
     output IorD,
     output MemRead,
@@ -28,7 +28,7 @@ module ControlUnit(
     // combinationally get control values from state
     StateToControl state_to_control(
         .current_state(current_state),          // input
-        .PCWriteNotCond(PCWriteNotCond),        // output
+        .PCWriteCond(PCWriteCond),              // output
         .PCWrite(PCWrite),                      // output
         .IorD(IorD),                            // output
         .MemRead(MemRead),                      // output
@@ -39,7 +39,7 @@ module ControlUnit(
         .ALUOp(ALUOp),                          // output
         .ALUSrcB(ALUSrcB),                      // output
         .ALUSrcA(ALUSrcA),                      // output
-        .RegWrite(RegWrite),                    // output
+        .RegWrite(RegWrite)                     // output
     );
 
 

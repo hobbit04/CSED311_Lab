@@ -16,7 +16,7 @@ module cpu(input reset,       // positive reset signal
   /***** Wire declarations *****/
   
   // Control wires
-  wire PCWriteNotCond;
+  wire PCWriteCond;
   wire PCWrite;
   wire IorD;
   wire MemRead;
@@ -30,7 +30,7 @@ module cpu(input reset,       // positive reset signal
   wire RegWrite;
   
   // register writeback data
-  wire WriteData;
+  wire [31:0] WriteData;
   
   // memory & register file outputs
   wire [31:0] MemData;
@@ -45,7 +45,7 @@ module cpu(input reset,       // positive reset signal
 
   wire [31:0] alu_in_1;
   wire [31:0] alu_in_2;
-  wire [3:0] ALUControl;
+  wire [4:0] ALUControl;
   wire [31:0] alu_result;
   wire alu_bcond;
 
@@ -55,7 +55,7 @@ module cpu(input reset,       // positive reset signal
   assign is_halted = is_ecall && ecall_reg_cond;
   assign next_pc = PCSource ? ALUOut : alu_result;
   assign addr = IorD ? ALUOut : current_pc;
-  assign WriteData = MemToReg ? MDR : ALUOut;
+  assign WriteData = MemtoReg ? MDR : ALUOut;
   assign alu_in_1 = ALUSrcA ? A : current_pc;
   assign alu_in_2 = ALUSrcB[1] ? immediate : (ALUSrcB[0] ? 4 : B);
 
@@ -98,7 +98,7 @@ module cpu(input reset,       // positive reset signal
     .rd(IR[11:7]),                    // input
     .rd_din(WriteData),               // input
     .write_enable(RegWrite),          // input
-    .ecall_reg_cond(ecall_reg_cond)   // output (ecall check)
+    .ecall_reg_cond(ecall_reg_cond),  // output (ecall check)
     .rs1_dout(regA_value),            // output
     .rs2_dout(regB_value),            // output
     .print_reg(print_reg)             // output (TO PRINT REGISTER VALUES IN TESTBENCH)
@@ -120,7 +120,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),                      // input
     .clk(clk),                          // input
     .opcode(IR[6:0]),                   // input
-    .PCWriteNotCond(PCWriteNotCond),    // output
+    .PCWriteCond(PCWriteCond),          // output
     .PCWrite(PCWrite),                  // output
     .IorD(IorD),                        // output
     .MemRead(MemRead),                  // output
@@ -143,7 +143,7 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit(
-    .part_of_inst({IR[30], IR[14:12]}),   // input
+    .functs({IR[30], IR[14:12]}),         // input
     .ALUOp(ALUOp),                        // input
     .ALUControl(ALUControl)               // output
   );
