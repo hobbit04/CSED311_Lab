@@ -28,7 +28,7 @@ module StateMachine(
 
             `EX_R: next_state = `WB_ALU;
             `EX_IALU: next_state = `WB_ALU;
-            `WB_ALU: next_state = `ID;
+            `WB_ALU: next_state = `IF;
 
             `EX_LDSD: if(opcode == `LOAD) begin
                 next_state = `MEM_LD;
@@ -40,12 +40,11 @@ module StateMachine(
             `WB_LD: next_state = `IF;
             `MEM_SD: next_state = `IF;
             
-            /*
             `ID_B: next_state = `EX_B1;
             `EX_B1: next_state = `EX_B2;
             `EX_B2: next_state = `IF;
-            */
             
+
             `EX_JAL: next_state = `IF;
             `EX_JALR: next_state = `IF;
             default: next_state = `IF;

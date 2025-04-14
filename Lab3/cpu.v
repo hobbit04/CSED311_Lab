@@ -83,10 +83,13 @@ module cpu(input reset,       // positive reset signal
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
-    .reset(reset),            // input (Use reset to initialize PC. Initial value must be 0)
-    .clk(clk),                // input
-    .next_pc(next_pc),        // input
-    .current_pc(current_pc)   // output
+    .reset(reset),              // input (Use reset to initialize PC. Initial value must be 0)
+    .clk(clk),                  // input
+    .next_pc(next_pc),          // input
+    .PCWrite(PCWrite),          // input
+    .PCWriteCond(PCWriteCond),  // input
+    .alu_bcond(alu_bcond),      // input
+    .current_pc(current_pc)     // output
   );
 
   // ---------- Register File ----------
