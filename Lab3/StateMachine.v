@@ -9,8 +9,8 @@ module StateMachine(
     
     always @(*) begin
         case(current_state)
-            `IF: if(opcode == `BRANCH) begin
-                next_state = `ID_B;
+            `IF: if((opcode == `BRANCH) || (opcode == `ECALL)) begin
+                next_state = `ID_PC;
             end
             else begin
                 next_state = `ID;
@@ -40,7 +40,12 @@ module StateMachine(
             `WB_LD: next_state = `IF;
             `MEM_SD: next_state = `IF;
             
-            `ID_B: next_state = `EX_B1;
+            `ID_PC: if(opcode == `ECALL) begin
+                next_state = `IF;
+            end
+            else begin
+                next_state = `EX_B1;
+            end
             `EX_B1: next_state = `EX_B2;
             `EX_B2: next_state = `IF;
             

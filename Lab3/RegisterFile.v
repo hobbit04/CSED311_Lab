@@ -11,7 +11,7 @@ module RegisterFile(input	reset,
                     output [31:0] print_reg[0:31]);  // output of rs 2
   integer i;
 
-  assign ecall_reg_cond = rf[17] == 10 ? 1 : 0;
+  assign ecall_reg_cond = (rf[17] == 10) ? 1 : 0;
 
   // Register file
   reg [31:0] rf[0:31];

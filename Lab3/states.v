@@ -9,7 +9,7 @@
 `define WB_LD   4'b0111
 `define MEM_SD  4'b1000
 
-`define ID_B    4'b1001
+`define ID_PC   4'b1001
 `define EX_B1   4'b1010
 `define EX_B2   4'b1011
 

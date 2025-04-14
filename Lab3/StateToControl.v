@@ -143,7 +143,7 @@ module StateToControl(
             // A <- RF[rs1(IR)]
             // B <- RF[rs2(IR)]
             // PC <- PC + 4
-            `ID_B: begin
+            `ID_PC: begin
                 ALUSrcA = 0;
                 ALUSrcB = 2'b01;
                 ALUOp = 2'b00;
