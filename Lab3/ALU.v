@@ -15,7 +15,7 @@ module ALU (input [3:0] ALUControl,
             `FUNC_BEQ : alu_bcond = (alu_in_1 == alu_in_2); 
             `FUNC_BNE : alu_bcond = (alu_in_1 != alu_in_2);
             `FUNC_BLT : alu_bcond = ($signed(alu_in_1) < $signed(alu_in_2));
-            `FUNC_BGE : alu_bcond = ($signed(alu_in_1) >= $signed(alu_in_2));            
+            `FUNC_BGE : alu_bcond = ($signed(alu_in_1) >= $signed(alu_in_2));
             
             `FUNC_AND : alu_result = alu_in_1 & alu_in_2;
             `FUNC_OR : alu_result = alu_in_1 | alu_in_2;

@@ -2,7 +2,7 @@
 
 module StateToControl(
     input [3:0] current_state,
-    output reg PCWriteCond,
+    output reg PCWriteNotCond,
     output reg PCWrite,
     output reg IorD,
     output reg MemRead,
@@ -18,7 +18,7 @@ module StateToControl(
 
     // combinational logic to determine control based on state
     always @(*) begin
-        PCWriteCond = 0;
+        PCWriteNotCond = 0;
         PCWrite = 0;
         IorD = 0;
         MemRead = 0;
@@ -41,7 +41,18 @@ module StateToControl(
 
             // A <- RF[rs1(IR)]
             // B <- RF[rs2(IR)]
-            // ALUOut <- PC+4
+            // PC <- PC + 4
+            `ID_ECALL: begin
+                ALUSrcA = 0;
+                ALUSrcB = 2'b01;
+                ALUOp = 2'b00;
+                PCSource = 0;
+                PCWrite = 1;
+            end
+
+            // A <- RF[rs1(IR)]
+            // B <- RF[rs2(IR)]
+            // ALUOut <- PC + 4
             `ID: begin
                 ALUSrcA = 0;
                 ALUSrcB = 2'b01;
@@ -140,31 +151,24 @@ module StateToControl(
                 PCWrite = 1;
             end
 
-            // A <- RF[rs1(IR)]
-            // B <- RF[rs2(IR)]
-            // PC <- PC + 4
-            `ID_PC: begin
-                ALUSrcA = 0;
-                ALUSrcB = 2'b01;
-                ALUOp = 2'b00;
-                PCSource = 0;
-                PCWrite = 1;
-            end
-
-            // ALUOut <- PC + imm
+            // cond? (A, B). if(!cond?) then PC <- ALUOut
             `EX_B1: begin
-                ALUSrcA = 0;
-                ALUSrcB = 2'b10;
-                ALUOp = 2'b00;
-            end
-
-            // cond? (A, B). if(cond?) then PC <- ALUOut
-            `EX_B2: begin
                 ALUSrcA = 1;
                 ALUSrcB = 2'b00;
                 ALUOp = 2'b01;
+
                 PCSource = 1;
-                PCWriteCond = 1;
+                PCWriteNotCond = 1;
+            end
+
+            // PC <- PC + imm
+            `EX_B2: begin
+                ALUSrcA = 0;
+                ALUSrcB = 2'b10;
+                ALUOp = 2'b00;
+
+                PCSource = 0;
+                PCWrite = 1;
             end
 
             default: ;

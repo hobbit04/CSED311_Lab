@@ -16,7 +16,7 @@ module cpu(input reset,       // positive reset signal
   /***** Wire declarations *****/
   
   // Control wires
-  wire PCWriteCond;
+  wire PCWriteNotCond;
   wire PCWrite;
   wire IorD;
   wire MemRead;
@@ -83,13 +83,13 @@ module cpu(input reset,       // positive reset signal
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
-    .reset(reset),              // input (Use reset to initialize PC. Initial value must be 0)
-    .clk(clk),                  // input
-    .next_pc(next_pc),          // input
-    .PCWrite(PCWrite),          // input
-    .PCWriteCond(PCWriteCond),  // input
-    .alu_bcond(alu_bcond),      // input
-    .current_pc(current_pc)     // output
+    .reset(reset),                    // input (Use reset to initialize PC. Initial value must be 0)
+    .clk(clk),                        // input
+    .next_pc(next_pc),                // input
+    .PCWrite(PCWrite),                // input
+    .PCWriteNotCond(PCWriteNotCond),  // input
+    .alu_bcond(alu_bcond),            // input
+    .current_pc(current_pc)           // output
   );
 
   // ---------- Register File ----------
@@ -123,7 +123,8 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),                      // input
     .clk(clk),                          // input
     .opcode(IR[6:0]),                   // input
-    .PCWriteCond(PCWriteCond),          // output
+    .alu_bcond(alu_bcond),              // input
+    .PCWriteNotCond(PCWriteNotCond),    // output
     .PCWrite(PCWrite),                  // output
     .IorD(IorD),                        // output
     .MemRead(MemRead),                  // output

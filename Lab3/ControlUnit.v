@@ -2,7 +2,8 @@ module ControlUnit(
     input reset,
     input clk,
     input [6:0] opcode,
-    output PCWriteCond,
+    input alu_bcond,
+    output PCWriteNotCond,
     output PCWrite,
     output IorD,
     output MemRead,
@@ -28,7 +29,7 @@ module ControlUnit(
     // combinationally get control values from state
     StateToControl state_to_control(
         .current_state(current_state),          // input
-        .PCWriteCond(PCWriteCond),              // output
+        .PCWriteNotCond(PCWriteNotCond),        // output
         .PCWrite(PCWrite),                      // output
         .IorD(IorD),                            // output
         .MemRead(MemRead),                      // output
@@ -47,6 +48,7 @@ module ControlUnit(
     // combinationally get next state, based on current state and opcode
     StateMachine state_machine(
         .opcode(opcode),                    // input
+        .alu_bcond(alu_bcond),              // input
         .current_state(current_state),      // input
         .next_state(next_state)             // output
     );
