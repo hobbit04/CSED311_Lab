@@ -151,7 +151,6 @@ module StateToControl(
                 PCWrite = 1;
             end
 
-            /*****NOT DONE FROM BELOW*****/
             // ALUOut <- PC + imm
             `EX_B1: begin
                 ALUSrcA = 0;
@@ -159,10 +158,13 @@ module StateToControl(
                 ALUOp = 2'b00;
             end
 
+            // cond? (A, B). if(cond?) then PC <- ALUOut
             `EX_B2: begin
                 ALUSrcA = 1;
                 ALUSrcB = 2'b00;
                 ALUOp = 2'b01;
+                PCSource = 1;
+                PCWriteCond = 1;
             end
 
             default: ;

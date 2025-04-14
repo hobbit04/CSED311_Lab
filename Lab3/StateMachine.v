@@ -44,7 +44,6 @@ module StateMachine(
             `EX_B1: next_state = `EX_B2;
             `EX_B2: next_state = `IF;
             
-
             `EX_JAL: next_state = `IF;
             `EX_JALR: next_state = `IF;
             default: next_state = `IF;
