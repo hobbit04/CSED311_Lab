@@ -45,7 +45,7 @@ module cpu(input reset,       // positive reset signal
 
   wire [31:0] alu_in_1;
   wire [31:0] alu_in_2;
-  wire [5:0] ALUControl;
+  wire [3:0] ALUControl;
   wire [31:0] alu_result;
   wire alu_bcond;
 
