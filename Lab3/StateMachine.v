@@ -44,7 +44,6 @@ module StateMachine(
             `WB_LD: next_state = `IF;
             `MEM_SD: next_state = `IF;
             
-            // Potential issue 1
             `EX_B1: if(alu_bcond == 0) begin
                 next_state = `IF;
             end

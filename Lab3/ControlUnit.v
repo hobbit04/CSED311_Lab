@@ -43,8 +43,6 @@ module ControlUnit(
         .RegWrite(RegWrite)                     // output
     );
 
-
-
     // combinationally get next state, based on current state and opcode
     StateMachine state_machine(
         .opcode(opcode),                    // input
