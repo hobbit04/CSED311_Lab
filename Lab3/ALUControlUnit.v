@@ -3,7 +3,7 @@
 module ALUControlUnit(
 
     input [3:0] functs,             // (that bit from funct7), (funct3)
-    input [6:0] opcode,             // opcode (duh)
+    input [6:0] opcode,             // opcode
     input [1:0] ALUOp,              // From control unit
     output reg [3:0] ALUControl     // To ALU.
 );
