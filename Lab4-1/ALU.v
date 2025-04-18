@@ -4,7 +4,7 @@ module ALU(
     input [3:0] alu_control,
     input [31:0] alu_in_1,
     input [31:0] alu_in_2,
-    output reg [31:0] alu_result,
+    output reg [31:0] alu_result
     output reg alu_bcond
     );
 

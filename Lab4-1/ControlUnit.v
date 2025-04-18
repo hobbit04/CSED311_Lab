@@ -7,7 +7,6 @@ module ControlUnit(
     output reg mem_write,
     output reg alu_src,
     output reg reg_write,
-    output reg pc_to_reg,
     output reg [1:0] alu_op,
     output reg is_ecall
     );
@@ -17,26 +16,25 @@ module ControlUnit(
         mem_to_reg = 1'b0;
         mem_write = 1'b0;
         alu_src = 1'b0;
-        write_enable = 1'b0;
-        pc_to_reg = 1'b0;
+        reg_write = 1'b0;
         alu_op = 2'b00;
         is_ecall = 1'b0;
         case(opcode)
             `ARITHMETIC : begin
-                write_enable = 1'b1;
+                reg_write = 1'b1;
                 alu_op = 2'b00;
             end
             `ARITHMETIC_IMM : begin
                 alu_src = 1'b1;
                 alu_op = 2'b01;
-                write_enable = 1'b1;
+                reg_write = 1'b1;
             end
             `LOAD : begin
                 mem_read = 1'b1;
                 mem_to_reg = 1'b1;
                 alu_src = 1'b1;
                 alu_op = 2'b11;
-                write_enable = 1'b1;
+                reg_write = 1'b1;
             end
             `STORE : begin
                 mem_write = 1'b1;
