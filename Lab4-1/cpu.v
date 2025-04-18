@@ -32,7 +32,7 @@ module cpu(input reset,       // positive reset signal
   wire is_ecall;
   wire halt_sim;
   // Non-control related
-  wire [31:0] rs1_in;
+  wire [4:0] rs1_in;
   wire [31:0] rs1_data;
   wire [31:0] rs2_data;
   wire [31:0] imm_gen_out;
@@ -102,7 +102,7 @@ module cpu(input reset,       // positive reset signal
 
 
   /******* IF STAGE *******/
-  next_pc = current_pc + 4;
+  assign next_pc = current_pc + 4;
 
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
@@ -137,7 +137,7 @@ module cpu(input reset,       // positive reset signal
 
   /******* ID STAGE *******/
   assign rs1_in = is_ecall ? 5'b10001 : IF_ID_inst[19:15];
-  assign halt_sim = is_ecall && (rs1_data == 32d'10);
+  assign halt_sim = is_ecall && (rs1_data == 10);
 
   // ignore rd, rd_din, write_enable ports when first reading the code
   // (read them at WB stage)
@@ -228,8 +228,7 @@ module cpu(input reset,       // positive reset signal
     .alu_control(alu_control),    // input
     .alu_in_1(ID_EX_rs1_data),    // input  
     .alu_in_2(alu_in_2),          // input
-    .alu_result(alu_result),      // output
-    .alu_bcond()                  // output
+    .alu_result(alu_result)       // output
   );
 
   // Update EX/MEM pipeline registers here
@@ -280,6 +279,13 @@ module cpu(input reset,       // positive reset signal
   // Update MEM/WB pipeline registers here
   always @(posedge clk) begin
     if (reset) begin
+      MEM_WB_mem_to_reg <= 1'b0;
+      MEM_WB_reg_write <= 1'b0;
+      MEM_WB_is_halted <= 1'b0;
+      // Non-control values
+      MEM_WB_rd <= 5'b0;
+      MEM_WB_mem_to_reg_src_1 <= 32'b0;
+      MEM_WB_mem_to_reg_src_2 <= 32'b0;
     end
     else begin
       // Control values
