@@ -55,19 +55,21 @@ module cpu(input reset,       // positive reset signal
   reg MEM_WB_mem_to_reg_src_1;
   reg MEM_WB_mem_to_reg_src_2;
 
+
+
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
-    .reset(),       // input (Use reset to initialize PC. Initial value must be 0)
-    .clk(),         // input
+    .reset(reset),        // input (Use reset to initialize PC. Initial value must be 0)
+    .clk(clk),            // input
     .next_pc(),     // input
     .current_pc()   // output
   );
   
   // ---------- Instruction Memory ----------
   InstMemory imem(
-    .reset(),   // input
-    .clk(),     // input
+    .reset(reset),   // input
+    .clk(clk),     // input
     .addr(),    // input
     .dout()     // output
   );
@@ -82,15 +84,15 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Register File ----------
   RegisterFile reg_file (
-    .reset (),        // input
-    .clk (),          // input
-    .rs1 (),          // input
-    .rs2 (),          // input
-    .rd (),           // input
-    .rd_din (),       // input
-    .write_enable (),    // input
-    .rs1_dout (),     // output
-    .rs2_dout (),      // output
+    .reset(reset),        // input
+    .clk(clk),          // input
+    .rs1(),          // input
+    .rs2(),          // input
+    .rd(),           // input
+    .rd_din(),       // input
+    .write_enable(),    // input
+    .rs1_dout(),     // output
+    .rs2_dout(),      // output
     .print_reg(print_reg)
   );
 
@@ -110,7 +112,7 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Immediate Generator ----------
   ImmediateGenerator imm_gen(
-    .part_of_inst(),  // input
+    .instruction(),   // input
     .imm_gen_out()    // output
   );
 
@@ -124,17 +126,18 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (
-    .part_of_inst(),  // input
-    .alu_op()         // output
+    .functs(),        // input
+    .alu_op(),        // input
+    .alu_control()    // output
   );
 
   // ---------- ALU ----------
   ALU alu (
-    .alu_op(),      // input
+    .alu_control(), // input
     .alu_in_1(),    // input  
     .alu_in_2(),    // input
     .alu_result(),  // output
-    .alu_zero()     // output
+    .alu_bcond()    // output
   );
 
   // Update EX/MEM pipeline registers here
@@ -147,13 +150,13 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Data Memory ----------
   DataMemory dmem(
-    .reset (),      // input
-    .clk (),        // input
-    .addr (),       // input
-    .din (),        // input
-    .mem_read (),   // input
-    .mem_write (),  // input
-    .dout ()        // output
+    .reset(reset),      // input
+    .clk(clk),        // input
+    .addr(),       // input
+    .din(),        // input
+    .mem_read(),   // input
+    .mem_write(),  // input
+    .dout()        // output
   );
 
   // Update MEM/WB pipeline registers here
