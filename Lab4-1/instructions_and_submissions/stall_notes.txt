@@ -1,0 +1,27 @@
+I. Conceptual ideas
+    1. When to stall? (without data forwarding)
+        >> check if ID's registers is used in either EX or MEM
+        >> (in WB, updates happen in negedge and reads happen in posedge, so no conflict there.)
+    2. What to change when stalling?
+        >> Disable PC & IR latching
+            >> Merely disabling PC isn't enough (think about it)
+        >> Turn off control's "write" values (memwrite, regwrite)
+
+II. Implementation details
+    1. When to stall?
+        >> check (we're using?) and (they're using too?)
+            we're using?
+            >> rs1: R type, I type ALU, load, store
+            >> rs2: R type, store
+            they're using too?
+            >> whenever regwrite is enabled
+        >> Package all this logic to "StallDetection" with a single output
+    2. What to change when stalling?
+        a. disabling PC and IR latching
+            >> First, create 'enable' ports in PC and IR(= IF_ID_inst)
+            >> Then, connect them with output of StallDetection
+                >> Basically just add a condition in the update stage
+        b. Setting control values to 0
+            >> Put an AND gate in front of those control values, with the output of StallDetection
+            >> Should be pretty straightforward
+        

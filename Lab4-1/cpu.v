@@ -15,7 +15,8 @@ module cpu(input reset,       // positive reset signal
   
   
   /***** Wire declarations *****/
-  
+  wire is_stall;
+
   /***** IF Stage wires *****/
   wire [31:0] current_pc;
   wire [31:0] next_pc;
@@ -98,6 +99,18 @@ module cpu(input reset,       // positive reset signal
 
 
 
+  // ---------- Stall Detection ----------
+  StallDetection stall_detection(
+    .ID_rs1(rs1_in),                    // input
+    .ID_rs2(IF_ID_inst[24:20]),         // input
+    .ID_opcode(IF_ID_inst[6:0]),        // input
+    .EX_rd(ID_EX_rd),                   // input
+    .EX_reg_write(ID_EX_reg_write),     // input
+    .MEM_rd(EX_MEM_rd),                 // input
+    .MEM_reg_write(EX_MEM_reg_write),   // input
+    .is_stall(is_stall)                 // output
+  );
+
 
 
 
@@ -109,6 +122,7 @@ module cpu(input reset,       // positive reset signal
   PC pc(
     .reset(reset),            // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),                // input
+    .is_stall(is_stall),      // input
     .next_pc(next_pc),        // input
     .current_pc(current_pc)   // output
   );
@@ -126,7 +140,7 @@ module cpu(input reset,       // positive reset signal
     if (reset) begin
       IF_ID_inst <= 32'b0;
     end
-    else begin
+    else if (!is_stall) begin
       IF_ID_inst <= instruction;
     end
   end
@@ -196,10 +210,16 @@ module cpu(input reset,       // positive reset signal
       ID_EX_alu_src <= alu_src;
       ID_EX_alu_op <= alu_op;
       ID_EX_mem_read <= mem_read;
-      ID_EX_mem_write <= mem_write;
       ID_EX_mem_to_reg <= mem_to_reg;
-      ID_EX_reg_write <= reg_write;
       ID_EX_is_halted <= halt_sim;
+      if (is_stall) begin
+        ID_EX_mem_write <= 1'b0;
+        ID_EX_reg_write <= 1'b0;
+      end
+      else begin
+        ID_EX_mem_write <= mem_write;
+        ID_EX_reg_write <= reg_write;
+      end
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
       ID_EX_rs2_data <= rs2_data;
