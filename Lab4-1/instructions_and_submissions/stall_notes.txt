@@ -11,17 +11,15 @@ II. Implementation details
     1. When to stall?
         >> check (we're using?) and (they're using too?)
             we're using?
-            >> rs1: R type, I type ALU, load, store
-            >> rs2: R type, store
+              >> rs1: R type, I type ALU, load, store, ecall
+              >> rs2: R type, store
             they're using too?
-            >> whenever regwrite is enabled
+              >> whenever regwrite is enabled
         >> Package all this logic to "StallDetection" with a single output
     2. What to change when stalling?
         a. disabling PC and IR latching
-            >> First, create 'enable' ports in PC and IR(= IF_ID_inst)
-            >> Then, connect them with output of StallDetection
-                >> Basically just add a condition in the update stage
+            >> Basically just add a condition "if (!is_stall)" in the update stage
         b. Setting control values to 0
-            >> Put an AND gate in front of those control values, with the output of StallDetection
+            >> In the ID pipeline register update stage, put an additional if statement
             >> Should be pretty straightforward
         
