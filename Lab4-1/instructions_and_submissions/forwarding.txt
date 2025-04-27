@@ -1,0 +1,29 @@
+1. 언제 forwarding 해야 하나?
+2. 어디에 있는 데이터를 ALU에서 사용해야 하나?
+3. stall이 일어난 경우 어떻게 처리하나?
+
+i. 같은 레지스터를 사용하는 instruction의 거리가 1
+    if instruction이 load then 1 cycle stall
+    EX/MEM 의 레지스터를 ALU에 사용
+    5개의 컨트롤 모두 0으로 설정
+ii. .. 거리가 2
+    MEM/WB 의 레지스터를 ALU에 사용
+    3개의 컨트롤 모두 0으로 설정
+
+module ForwardingDetectioin
+    input is_stall -> 1이면 아무것도 안하고 넘김
+    input [4:0] ID_rs1,
+    input [4:0] ID_rs2,
+    input [6:0] ID_opcode,
+    input [4:0] EX_rd,  -> 얘가 ID_rs랑 같으면 forwarding (with i)
+    input EX_reg_write,
+    input [4:0] MEM_rd, -> 얘가 ID_rs랑 같으면 forwarding (with ii)
+    input MEM_reg_write,
+    output [1:0] is_forward_rs1  -> 00: no forwarding, 01: forwarding(case i), 10: forwarding(case ii)
+    output [1:0] is_forward_rs2  -> same as above
+
+    case i 부터 검사를 해야 함
+
+is_forward를 받아야 하는 모듈: ALU
+
+    
