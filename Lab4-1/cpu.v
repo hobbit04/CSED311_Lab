@@ -16,8 +16,6 @@ module cpu(input reset,       // positive reset signal
   
   /***** Wire declarations *****/
   wire is_stall;
-  wire [1:0] forward_rs1;
-  wire [1:0] forward_rs2;
 
   /***** IF Stage wires *****/
   wire [31:0] current_pc;
@@ -44,6 +42,11 @@ module cpu(input reset,       // positive reset signal
   wire [3:0] alu_control;
   wire [31:0] alu_in_2;
   wire [31:0] alu_result;
+
+  wire [31:0] alu_forwarding_1;
+  wire [31:0] alu_forwarding_2;
+  wire [1:0] forward_rs1;
+  wire [1:0] forward_rs2;
 
   /***** MEM Stage wires *****/
   wire [31:0] mem_data;
@@ -75,10 +78,9 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] ID_EX_rs2_data;
   reg [31:0] ID_EX_imm;
   reg [3:0] ID_EX_ALU_ctrl_unit_input;
-  reg [4:0] ID_EX_rd;
   reg [4:0] ID_EX_rs1;
-  reg [4:0] ID_EX_rs2;  // this will be used in forwarding detection
-  reg [6:0] ID_EX_opcode;
+  reg [4:0] ID_EX_rs2;
+  reg [4:0] ID_EX_rd;
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -110,24 +112,13 @@ module cpu(input reset,       // positive reset signal
     .ID_rs2(IF_ID_inst[24:20]),         // input
     .ID_opcode(IF_ID_inst[6:0]),        // input
     .EX_rd(ID_EX_rd),                   // input
-    .EX_reg_write(ID_EX_reg_write),     // input  // forwarding 할 때는 EX 단계는 확인 필요 없음
+    .EX_mem_read(ID_EX_mem_read),       // input
+    .EX_reg_write(ID_EX_reg_write),     // input
     .MEM_rd(EX_MEM_rd),                 // input
     .MEM_reg_write(EX_MEM_reg_write),   // input
     .is_stall(is_stall)                 // output
   );
 
-  ForwardingDetection forward_detection(
-    .is_stall(is_stall),
-    .ID_rs1(ID_EX_rs1),
-    .ID_rs2(ID_EX_rs2),
-    .ID_opcode(ID_EX_opcode),
-    .EX_rd(ID_EX_rd),
-    .EX_reg_write(ID_EX_reg_write),
-    .MEM_rd(EX_MEM_rd),                 // input
-    .MEM_reg_write(EX_MEM_reg_write),   // input
-    .forward_rs1(forward_rs1),   // output
-    .forward_rs2(forward_rs2)  // output
-  );
 
 
 
@@ -220,10 +211,9 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs2_data <= 32'b0;
       ID_EX_imm <= 32'b0;
       ID_EX_ALU_ctrl_unit_input <= 4'b0;
-      ID_EX_rd <= 5'b0;
       ID_EX_rs1 <= 5'b0;
       ID_EX_rs2 <= 5'b0;
-      ID_EX_opcode <= 7'b0;
+      ID_EX_rd <= 5'b0;
     end
     else begin
       // Control values
@@ -243,12 +233,10 @@ module cpu(input reset,       // positive reset signal
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
       ID_EX_rs2_data <= rs2_data;
-      ID_EX_rs1 <= rs1_in;
-      ID_EX_rs2 <= IF_ID_inst[24:20];
-      ID_EX_opcode <= IF_ID_inst[6:0];
-
       ID_EX_imm <= imm_gen_out;
       ID_EX_ALU_ctrl_unit_input <= {IF_ID_inst[30], IF_ID_inst[14:12]};
+      ID_EX_rs1 <= rs1_in;
+      ID_EX_rs2 <= IF_ID_inst[24:20];
       ID_EX_rd <= IF_ID_inst[11:7];
     end
   end
@@ -258,7 +246,26 @@ module cpu(input reset,       // positive reset signal
 
 
   /******* EX STAGE *******/
-  assign alu_in_2 = ID_EX_alu_src ? ID_EX_imm : ID_EX_rs2_data;
+  assign alu_forwarding_1 = forward_rs1[1] ? EX_MEM_alu_out :
+                          forward_rs1[0] ? writeback_data :
+                                           ID_EX_rs1_data;
+  assign alu_forwarding_2 = forward_rs2[1] ? EX_MEM_alu_out :
+                          forward_rs2[0] ? writeback_data :
+                                           ID_EX_rs2_data;
+  assign alu_in_2 = ID_EX_alu_src ? ID_EX_imm : alu_forwarding_2;
+
+
+  // ---------- Forwarding Unit ----------
+  ForwardingUnit forwarding_unit(
+    .EX_rs1(ID_EX_rs1),                   // input
+    .EX_rs2(ID_EX_rs2),                   // input
+    .MEM_rd(EX_MEM_rd),                   // input
+    .MEM_reg_write(EX_MEM_reg_write),     // input
+    .WB_rd(MEM_WB_rd),                    // input
+    .WB_reg_write(MEM_WB_reg_write),      // input
+    .forward_rs1(forward_rs1),            // output
+    .forward_rs2(forward_rs2)             // output
+    );
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (
@@ -269,14 +276,10 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- ALU ----------
   ALU alu (
-    .alu_control(alu_control),    // input
-    .alu_in_1(ID_EX_rs1_data),    // input  
-    .alu_in_2(alu_in_2),          // input
-    .forward_rs1(forward_rs1),
-    .forward_rs2(forward_rs2),
-    .EX_MEM_alu_out(MEM_WB_mem_to_reg_src_2),
-    .MEM_WB_alu_out(MEM_WB_mem_to_reg_src_1),
-    .alu_result(alu_result)       // output
+    .alu_control(alu_control),            // input
+    .alu_in_1(alu_forwarding_1),          // input  
+    .alu_in_2(alu_forwarding_2),          // input
+    .alu_result(alu_result)               // output
   );
 
   // Update EX/MEM pipeline registers here

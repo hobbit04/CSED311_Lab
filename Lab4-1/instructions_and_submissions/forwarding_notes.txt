@@ -1,0 +1,65 @@
+1. When to forward?
+2. How to forward?
+3. Any changes in stalling??
+
+*** Note that the destination of forwarded stuff happens at the START of EX stage,
+    and it has NOTHING to do with ID stage.......
+
+Observations
+    a. load를 제외한 모든 경우에는 ALU의 끝(= EX의 끝자락)에서 필요한 정보가 만들어진다.
+    b. load인 경우는 MEMory의 끝 (= MEM의 끝자락)에서 필요한 정보가 만들어진다.
+    c. 이제 ID 스테이지 말고 EX 스테이지에서 정보를 끌어올 거다.
+    
+    이 말의 의미는, 뒤에녀석이 load가 아니라면 무조건 땡겨올 수 있다는 거다. 정보를.
+    그리고, load인 경우엔 한 번 기다리면 load instruction이 WB단계로 가겠지? 그럼 이 때도 같은 forwarding logic을 써 주면 된다.
+
+    So.. Stalling logic부터 손봐주자.
+    "DISTANCE CALCULATION"을 통한 stall (더 일반화된 version의 stall logic in code)
+
+
+
+
+
+
+I. Generalization of stall
+/*
+*   *** Design
+*       Before data forwarding: EVERY read to write had distance 3, and must've 
+*       After data forwarding: 
+*
+*   모든 stall은 그냥 ID stage에서 할게요.. 그래도 상관없음 (어디서 읽던 간격이 중요한 것이니..!)
+*       read 특이사항
+*           - ecall: ID에서 읽음
+*           - 나머지: EX에서 읽음
+*       write 특이사항
+*           - load: WB(= MEM의 끝자락)에서 generated
+*           - 나머지: MEM(= EX의 끝자락)에서 generated
+*       
+*   *** Implementation
+*       그래서... IF - ID - EX - MEM - WB에서
+*       1. 각각의 opcode에 대한 "read & write stage" (IF, ID, EX, MEM, WB) 부여
+*       2. EX랑 MEM이랑 opcode도 읽어와서 각 스테이지의 instruction에 대한 write stage 알아냄
+*
+*       지금까지: ID 명령어의 read stage, EX & MEM & WB 명령어의 write stage 알고 있음
+*       - read stage: ID면 0 (ID - ID), EX면 -1 (ID - EX)
+*       - write stage: (write stage)
+*
+*
+*/
+    SCRAPPED (과도한 일반화 ㄴㄴ... 걍 그때그때 필요한 stall 구현하기)
+
+현재 필요한 stall들
+    1. ECALL인 경우: 17을 쓴다 생각하고 WB될 때까지 기다리는 stall
+    2. 그 외의 경우: load면 stall 1번, 그 외에는 stall 안 하기
+
+Forwarding logic: DISTANCE 차이에 따른 것이므로 그냥 로직 그대로 쓰기
+
+
+
+II. Forwarding logic
+    *** Design
+        if (dist = 1) then forward from MEM
+        if (dist = 2) then forward from WB
+        else don't forward
+    
+    *** Implementation: how to calculate distance? 걍해 망ㅁ러니 앚;ㅓㅊ니.ㅗ리너ㅏ.ㅍ ㅣㅇ/
