@@ -106,8 +106,8 @@ module cpu(input reset,       // positive reset signal
     .ID_rs1(rs1_in),                    // input
     .ID_rs2(IF_ID_inst[24:20]),         // input
     .ID_opcode(IF_ID_inst[6:0]),        // input
-    // .EX_rd(ID_EX_rd),                   // input
-    // .EX_reg_write(ID_EX_reg_write),     // input  // forwarding 할 때는 EX 단계는 확인 필요 없음
+    .EX_rd(ID_EX_rd),                   // input
+    .EX_reg_write(ID_EX_reg_write),     // input  // forwarding 할 때는 EX 단계는 확인 필요 없음
     .MEM_rd(EX_MEM_rd),                 // input
     .MEM_reg_write(EX_MEM_reg_write),   // input
     .is_stall(is_stall)                 // output

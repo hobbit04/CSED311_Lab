@@ -5,10 +5,10 @@
 i. 같은 레지스터를 사용하는 instruction의 거리가 1
     if instruction이 load then 1 cycle stall
     EX/MEM 의 레지스터를 ALU에 사용
-    5개의 컨트롤 모두 0으로 설정
+
 ii. .. 거리가 2
     MEM/WB 의 레지스터를 ALU에 사용
-    3개의 컨트롤 모두 0으로 설정
+
 
 module ForwardingDetectioin
     input is_stall -> 1이면 아무것도 안하고 넘김
@@ -26,4 +26,8 @@ module ForwardingDetectioin
 
 is_forward를 받아야 하는 모듈: ALU
 
-    
+      rs1, rs2
+case1  
+case2
+
+이렇게 총 4가지 경우가 있음

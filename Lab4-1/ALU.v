@@ -24,7 +24,7 @@ module ALU(
             `ALU_ADD : alu_result = forwarded_alu_in_1 + forwarded_alu_in_2;
             `ALU_SUB : alu_result = forwarded_alu_in_1 - forwarded_alu_in_2;
             `ALU_SLL : alu_result = forwarded_alu_in_1 << forwarded_alu_in_2[4:0];
-            `ALU_SLT : alu_result = ($signed(forwarded_alu_in_1) < $signed(forwarded_alu_in_1)) ? 32'b1 : 32'b0;
+            `ALU_SLT : alu_result = ($signed(forwarded_alu_in_1) < $signed(forwarded_alu_in_2)) ? 32'b1 : 32'b0;
             `ALU_SLTU : alu_result = (forwarded_alu_in_1 < forwarded_alu_in_2) ? 32'b1 : 32'b0;            
             `ALU_XOR : alu_result = forwarded_alu_in_1 ^ forwarded_alu_in_2;
             `ALU_SRL : alu_result = forwarded_alu_in_1 >> forwarded_alu_in_2[4:0];

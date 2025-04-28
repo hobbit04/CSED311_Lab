@@ -3,8 +3,8 @@ module StallDetection(
     input [4:0] ID_rs1,
     input [4:0] ID_rs2,
     input [6:0] ID_opcode,
-    // input [4:0] EX_rd,
-    // input EX_reg_write,
+    input [4:0] EX_rd,
+    input EX_reg_write,
     input [4:0] MEM_rd,
     input MEM_reg_write,
     output reg is_stall
@@ -15,6 +15,7 @@ module StallDetection(
 
     wire use_rs1, use_rs2;
     // wire stall_by_ex, stall_by_mem;
+    wire stall_by_ecall;  // from EX
     wire stall_by_mem;
 
 
@@ -26,11 +27,12 @@ module StallDetection(
 
     // assign stall_by_ex = ((ID_rs1 == EX_rd) && use_rs1 && EX_reg_write) ||
     //                          ((ID_rs2 == EX_rd) && use_rs2 && EX_reg_write);
+    assign stall_by_ecall = (ID_opcode == `ECALL) && (ID_rs1 == EX_rd && EX_reg_write) && (EX_rd != 5'b0);
     assign stall_by_mem = ((ID_rs1 == MEM_rd) && use_rs1 && MEM_reg_write) ||
                               ((ID_rs2 == MEM_rd) && use_rs2 && MEM_reg_write);
 
     always @(*) begin
-        if (stall_by_mem) begin
+        if (stall_by_ecall || stall_by_mem) begin
             is_stall = 1'b1;
         end
         else begin
