@@ -7,6 +7,7 @@ module StallDetection(
     input EX_mem_read,
     input EX_reg_write,
     input [4:0] MEM_rd,
+    input MEM_mem_read,
     input MEM_reg_write,
     output reg is_stall
     );
@@ -24,12 +25,13 @@ module StallDetection(
     assign use_rs1 = (rs1_and_rs2_conditions || rs1_conditions) && (ID_rs1 != 5'b0);
     assign use_rs2 = rs1_and_rs2_conditions && (ID_rs2 != 5'b0);
 
-
+    // EX stage: stall if load
     assign stall_by_load = ((ID_rs1 == EX_rd) && use_rs1 && EX_mem_read) ||
                            ((ID_rs2 == EX_rd) && use_rs2 && EX_mem_read);
 
+    // MEM stage: just stall if load; EX stage: stall for any write
     assign stall_by_ecall = ((ID_opcode == `ECALL) && (EX_rd == 5'b10001) && (EX_reg_write)) ||
-                            ((ID_opcode == `ECALL) && (MEM_rd == 5'b10001) && (MEM_reg_write));
+                            ((ID_opcode == `ECALL) && (MEM_rd == 5'b10001) && (MEM_mem_read));
 
     always @(*) begin
         if (stall_by_load || stall_by_ecall) begin
