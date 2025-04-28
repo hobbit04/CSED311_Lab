@@ -284,7 +284,7 @@ module cpu(input reset,       // positive reset signal
   // ---------- ALU ----------
   ALU alu (
     .alu_control(alu_control),            // input
-    .alu_in_1(alu_forward_data_1),          // input  
+    .alu_in_1(alu_forward_data_1),        // input  
     .alu_in_2(alu_in_2),                  // input
     .alu_result(alu_result)               // output
   );
