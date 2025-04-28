@@ -16,6 +16,9 @@ module cpu(input reset,       // positive reset signal
   
   /***** Wire declarations *****/
   wire is_stall;
+  wire [1:0] forward_ecall;
+  wire [1:0] forward_rs1;
+  wire [1:0] forward_rs2;
 
   /***** IF Stage wires *****/
   wire [31:0] current_pc;
@@ -38,17 +41,13 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] rs2_data;
   wire [31:0] imm_gen_out;
   wire [31:0] ecall_forward_data;
-  wire [1:0] forward_ecall;
 
   /***** EX Stage wires *****/
   wire [3:0] alu_control;
   wire [31:0] alu_in_2;
   wire [31:0] alu_result;
-
   wire [31:0] alu_forward_data_1;
   wire [31:0] alu_forward_data_2;
-  wire [1:0] forward_rs1;
-  wire [1:0] forward_rs2;
 
   /***** MEM Stage wires *****/
   wire [31:0] mem_data;
@@ -110,6 +109,38 @@ module cpu(input reset,       // positive reset signal
 
 
 
+  /******* Stall & Data Forwarding *******/
+    // ---------- Stall Detection ----------
+  StallDetection stall_detection(
+    .ID_rs1(rs1_in),                    // input
+    .ID_rs2(IF_ID_inst[24:20]),         // input
+    .ID_opcode(IF_ID_inst[6:0]),        // input
+    .EX_rd(ID_EX_rd),                   // input
+    .EX_mem_read(ID_EX_mem_read),       // input
+    .EX_reg_write(ID_EX_reg_write),     // input
+    .MEM_rd(EX_MEM_rd),                 // input
+    .MEM_mem_read(EX_MEM_mem_read),     // input
+    .MEM_reg_write(EX_MEM_reg_write),   // input
+    .is_stall(is_stall)                 // output
+  );
+  
+  // ---------- Forwarding Unit ----------
+  ForwardingUnit forwarding_unit(
+    .EX_rs1(ID_EX_rs1),                   // input
+    .EX_rs2(ID_EX_rs2),                   // input
+    .MEM_rd(EX_MEM_rd),                   // input
+    .MEM_reg_write(EX_MEM_reg_write),     // input
+    .WB_rd(MEM_WB_rd),                    // input
+    .WB_reg_write(MEM_WB_reg_write),      // input
+    .forward_ecall(forward_ecall),        // output
+    .forward_rs1(forward_rs1),            // output
+    .forward_rs2(forward_rs2)             // output
+    );
+
+
+
+
+
   /******* IF STAGE *******/
   assign next_pc = current_pc + 4;
 
@@ -151,20 +182,6 @@ module cpu(input reset,       // positive reset signal
   assign ecall_forward_data = forward_ecall[1] ? EX_MEM_alu_out :
                           forward_ecall[0] ? writeback_data :
                                            rs1_data;
-
-  // ---------- Stall Detection ----------
-  StallDetection stall_detection(
-    .ID_rs1(rs1_in),                    // input
-    .ID_rs2(IF_ID_inst[24:20]),         // input
-    .ID_opcode(IF_ID_inst[6:0]),        // input
-    .EX_rd(ID_EX_rd),                   // input
-    .EX_mem_read(ID_EX_mem_read),       // input
-    .EX_reg_write(ID_EX_reg_write),     // input
-    .MEM_rd(EX_MEM_rd),                 // input
-    .MEM_mem_read(EX_MEM_mem_read),     // input
-    .MEM_reg_write(EX_MEM_reg_write),   // input
-    .is_stall(is_stall)                 // output
-  );
 
   // ---------- Register File ----------
   RegisterFile reg_file (
@@ -257,20 +274,6 @@ module cpu(input reset,       // positive reset signal
                                            ID_EX_rs2_data;
   assign alu_in_2 = ID_EX_alu_src ? ID_EX_imm : alu_forward_data_2;
 
-
-  // ---------- Forwarding Unit ----------
-  ForwardingUnit forwarding_unit(
-    .EX_rs1(ID_EX_rs1),                   // input
-    .EX_rs2(ID_EX_rs2),                   // input
-    .MEM_rd(EX_MEM_rd),                   // input
-    .MEM_reg_write(EX_MEM_reg_write),     // input
-    .WB_rd(MEM_WB_rd),                    // input
-    .WB_reg_write(MEM_WB_reg_write),      // input
-    .forward_ecall(forward_ecall),        // output
-    .forward_rs1(forward_rs1),            // output
-    .forward_rs2(forward_rs2)             // output
-    );
-
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (
     .functs(ID_EX_ALU_ctrl_unit_input),   // input
@@ -361,6 +364,4 @@ module cpu(input reset,       // positive reset signal
   /******* WB STAGE *******/
   assign is_halted = MEM_WB_is_halted;
   assign writeback_data = MEM_WB_mem_to_reg ? MEM_WB_mem_to_reg_src_2 : MEM_WB_mem_to_reg_src_1;
-  // Now read rd, rd_din, write_enable ports in RegisterFile of ID stage
-
 endmodule

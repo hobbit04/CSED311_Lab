@@ -29,7 +29,7 @@ module StallDetection(
     assign stall_by_load = ((ID_rs1 == EX_rd) && use_rs1 && EX_mem_read) ||
                            ((ID_rs2 == EX_rd) && use_rs2 && EX_mem_read);
 
-    // MEM stage: just stall if load; EX stage: stall for any write
+    // MEM stage: stall only if load; EX stage: stall for any write
     assign stall_by_ecall = ((ID_opcode == `ECALL) && (EX_rd == 5'b10001) && (EX_reg_write)) ||
                             ((ID_opcode == `ECALL) && (MEM_rd == 5'b10001) && (MEM_mem_read));
 
