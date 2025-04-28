@@ -76,6 +76,9 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] ID_EX_imm;
   reg [3:0] ID_EX_ALU_ctrl_unit_input;
   reg [4:0] ID_EX_rd;
+  reg [4:0] ID_EX_rs1;
+  reg [4:0] ID_EX_rs2;  // this will be used in forwarding detection
+  reg [6:0] ID_EX_opcode;
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -115,9 +118,9 @@ module cpu(input reset,       // positive reset signal
 
   ForwardingDetection forward_detection(
     .is_stall(is_stall),
-    .ID_rs1(rs1_in),
-    .ID_rs2(IF_ID_inst[24:20]),
-    .ID_opcode(IF_ID_inst[6:0]),
+    .ID_rs1(ID_EX_rs1),
+    .ID_rs2(ID_EX_rs2),
+    .ID_opcode(ID_EX_opcode),
     .EX_rd(ID_EX_rd),
     .EX_reg_write(ID_EX_reg_write),
     .MEM_rd(EX_MEM_rd),                 // input
@@ -218,6 +221,9 @@ module cpu(input reset,       // positive reset signal
       ID_EX_imm <= 32'b0;
       ID_EX_ALU_ctrl_unit_input <= 4'b0;
       ID_EX_rd <= 5'b0;
+      ID_EX_rs1 <= 5'b0;
+      ID_EX_rs2 <= 5'b0;
+      ID_EX_opcode <= 7'b0;
     end
     else begin
       // Control values
@@ -237,6 +243,10 @@ module cpu(input reset,       // positive reset signal
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
       ID_EX_rs2_data <= rs2_data;
+      ID_EX_rs1 <= rs1_in;
+      ID_EX_rs2 <= IF_ID_inst[24:20];
+      ID_EX_opcode <= IF_ID_inst[6:0];
+
       ID_EX_imm <= imm_gen_out;
       ID_EX_ALU_ctrl_unit_input <= {IF_ID_inst[30], IF_ID_inst[14:12]};
       ID_EX_rd <= IF_ID_inst[11:7];
@@ -264,7 +274,7 @@ module cpu(input reset,       // positive reset signal
     .alu_in_2(alu_in_2),          // input
     .forward_rs1(forward_rs1),
     .forward_rs2(forward_rs2),
-    .EX_MEM_alu_out(EX_MEM_alu_out),
+    .EX_MEM_alu_out(MEM_WB_mem_to_reg_src_2),
     .MEM_WB_alu_out(MEM_WB_mem_to_reg_src_1),
     .alu_result(alu_result)       // output
   );

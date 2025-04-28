@@ -10,7 +10,6 @@ module ForwardingDetection(
     output reg [1:0] forward_rs1,
     output reg [1:0] forward_rs2
 );
-    // Should I use clk?
     wire rs1_and_rs2_conditions;
     wire rs1_conditions;
 
