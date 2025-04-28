@@ -106,20 +106,6 @@ module cpu(input reset,       // positive reset signal
 
 
 
-  // ---------- Stall Detection ----------
-  StallDetection stall_detection(
-    .ID_rs1(rs1_in),                    // input
-    .ID_rs2(IF_ID_inst[24:20]),         // input
-    .ID_opcode(IF_ID_inst[6:0]),        // input
-    .EX_rd(ID_EX_rd),                   // input
-    .EX_mem_read(ID_EX_mem_read),       // input
-    .EX_reg_write(ID_EX_reg_write),     // input
-    .MEM_rd(EX_MEM_rd),                 // input
-    .MEM_reg_write(EX_MEM_reg_write),   // input
-    .is_stall(is_stall)                 // output
-  );
-
-
 
 
   /******* IF STAGE *******/
@@ -161,8 +147,19 @@ module cpu(input reset,       // positive reset signal
   assign rs1_in = is_ecall ? 5'b10001 : IF_ID_inst[19:15];
   assign halt_sim = is_ecall && (rs1_data == 10);
 
-  // ignore rd, rd_din, write_enable ports when first reading the code
-  // (read them at WB stage)
+  // ---------- Stall Detection ----------
+  StallDetection stall_detection(
+    .ID_rs1(rs1_in),                    // input
+    .ID_rs2(IF_ID_inst[24:20]),         // input
+    .ID_opcode(IF_ID_inst[6:0]),        // input
+    .EX_rd(ID_EX_rd),                   // input
+    .EX_mem_read(ID_EX_mem_read),       // input
+    .EX_reg_write(ID_EX_reg_write),     // input
+    .MEM_rd(EX_MEM_rd),                 // input
+    .MEM_reg_write(EX_MEM_reg_write),   // input
+    .is_stall(is_stall)                 // output
+  );
+
   // ---------- Register File ----------
   RegisterFile reg_file (
     .reset(reset),                    // input
@@ -278,7 +275,7 @@ module cpu(input reset,       // positive reset signal
   ALU alu (
     .alu_control(alu_control),            // input
     .alu_in_1(alu_forwarding_1),          // input  
-    .alu_in_2(alu_forwarding_2),          // input
+    .alu_in_2(alu_in_2),                  // input
     .alu_result(alu_result)               // output
   );
 
@@ -305,7 +302,7 @@ module cpu(input reset,       // positive reset signal
       EX_MEM_is_halted <= ID_EX_is_halted;
       // Non-control values
       EX_MEM_alu_out <= alu_result;
-      EX_MEM_dmem_data <= ID_EX_rs2_data;
+      EX_MEM_dmem_data <= alu_forwarding_2;
       EX_MEM_rd <= ID_EX_rd;
     end
   end

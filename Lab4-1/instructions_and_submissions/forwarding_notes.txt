@@ -49,8 +49,9 @@ I. Generalization of stall
     SCRAPPED (과도한 일반화 ㄴㄴ... 걍 그때그때 필요한 stall 구현하기)
 
 현재 필요한 stall들
-    1. ECALL인 경우: 17을 쓴다 생각하고 WB될 때까지 기다리는 stall
-    2. 그 외의 경우: load면 stall 1번, 그 외에는 stall 안 하기
+    1. 그 외의 경우: load면 stall 1번, 그 외에는 stall 안 하기
+    2. ECALL인 경우: 모두 +1의 stall을 하면 된다.
+        EX일 땐 모든 경우, MEM일 땐 load인지만 확인
 
 Forwarding logic: DISTANCE 차이에 따른 것이므로 그냥 로직 그대로 쓰기
 

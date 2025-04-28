@@ -20,7 +20,7 @@ module StallDetection(
 
     // for use_rs1 and use_rs2
     assign rs1_and_rs2_conditions = (ID_opcode == `ARITHMETIC) || (ID_opcode == `STORE);
-    assign rs1_conditions = (ID_opcode == `ARITHMETIC_IMM) || (ID_opcode == `LOAD) || (ID_opcode == `ECALL);
+    assign rs1_conditions = (ID_opcode == `ARITHMETIC_IMM) || (ID_opcode == `LOAD);
     assign use_rs1 = (rs1_and_rs2_conditions || rs1_conditions) && (ID_rs1 != 5'b0);
     assign use_rs2 = rs1_and_rs2_conditions && (ID_rs2 != 5'b0);
 
