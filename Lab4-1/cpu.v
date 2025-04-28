@@ -16,6 +16,8 @@ module cpu(input reset,       // positive reset signal
   
   /***** Wire declarations *****/
   wire is_stall;
+  wire [1:0] forward_rs1;
+  wire [1:0] forward_rs2;
 
   /***** IF Stage wires *****/
   wire [31:0] current_pc;
@@ -104,13 +106,25 @@ module cpu(input reset,       // positive reset signal
     .ID_rs1(rs1_in),                    // input
     .ID_rs2(IF_ID_inst[24:20]),         // input
     .ID_opcode(IF_ID_inst[6:0]),        // input
-    .EX_rd(ID_EX_rd),                   // input
-    .EX_reg_write(ID_EX_reg_write),     // input  // forwarding 할 때는 EX 단계는 확인 필요 없음
+    // .EX_rd(ID_EX_rd),                   // input
+    // .EX_reg_write(ID_EX_reg_write),     // input  // forwarding 할 때는 EX 단계는 확인 필요 없음
     .MEM_rd(EX_MEM_rd),                 // input
     .MEM_reg_write(EX_MEM_reg_write),   // input
     .is_stall(is_stall)                 // output
   );
 
+  ForwardingDetection forward_detection(
+    .is_stall(is_stall),
+    .ID_rs1(rs1_in),
+    .ID_rs2(IF_ID_inst[24:20]),
+    .ID_opcode(IF_ID_inst[6:0]),
+    .EX_rd(ID_EX_rd),
+    .EX_reg_write(ID_EX_reg_write),
+    .MEM_rd(EX_MEM_rd),                 // input
+    .MEM_reg_write(EX_MEM_reg_write),   // input
+    .forward_rs1(forward_rs1),   // output
+    .forward_rs2(forward_rs2)  // output
+  );
 
 
 
@@ -248,6 +262,10 @@ module cpu(input reset,       // positive reset signal
     .alu_control(alu_control),    // input
     .alu_in_1(ID_EX_rs1_data),    // input  
     .alu_in_2(alu_in_2),          // input
+    .forward_rs1(forward_rs1),
+    .forward_rs2(forward_rs2),
+    .EX_MEM_alu_out(EX_MEM_alu_out),
+    .MEM_WB_alu_out(MEM_WB_mem_to_reg_src_1),
     .alu_result(alu_result)       // output
   );
 

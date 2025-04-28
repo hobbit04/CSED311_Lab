@@ -30,7 +30,7 @@ module StallDetection(
                               ((ID_rs2 == MEM_rd) && use_rs2 && MEM_reg_write);
 
     always @(*) begin
-        if (stall_by_ex || stall_by_mem) begin
+        if (stall_by_mem) begin
             is_stall = 1'b1;
         end
         else begin
