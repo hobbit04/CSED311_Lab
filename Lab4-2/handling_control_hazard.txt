@@ -1,0 +1,6 @@
+BranchUnit: bcond를 만들던 부분을 가져옴. 
+input: rs1, rs2, pc, imm, opcode, funct3
+output: (32bits)address, (1bit)is_flush
+
+address: branch를 taken하는 경우 or jal/jalr인 경우 계산되고 pc + imm or rs1 + imm 을 가짐
+is_flush: branch를 taken 하거나 jal/jalr인 경우 1로 설정
