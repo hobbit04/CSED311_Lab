@@ -26,8 +26,6 @@ module BranchUnit(
                 endcase
                 if (is_flush)
                     branch_addr = pc + imm;
-                else
-                    branch_addr = pc + 4; // Next instruction
             end
             `JAL: begin
                 is_flush = 1'b1;

@@ -4,3 +4,42 @@ output: (32bits)address, (1bit)is_flush
 
 address: branch를 taken하는 경우 or jal/jalr인 경우 계산되고 pc + imm or rs1 + imm 을 가짐
 is_flush: branch를 taken 하거나 jal/jalr인 경우 1로 설정
+
+loop test debugging
+fe010113   → addi  sp, sp, -32       # 스택 포인터(sp) -= 32
+00812e23   → sw    ra, 28(sp)        # 복귀주소(ra) 저장
+02010413   → addi  s0, sp, 32         # 프레임 포인터(s0) = sp + 32
+00a00793   → addi  a5, zero, 10      # a5 ← 10
+fef42223   → sw    a5,  4(s0)        # sum (4(s0)) ← a5
+fe042623   → sw    zero, -24(s0)     # i (−24(s0)) ← 0
+fe042423   → sw    zero, -28(s0)     # unused (−28(s0)) ← 0
+0200006f   → jal   zero,  +32        # 무조건 점프: PC += 32
+fec42703   → lw    a4, -20(s0)       # a4 ← sum
+fe842783   → lw    a5, -24(s0)       # a5 ← i
+00f707b3   → add   a5, a4, a5        # a5 = sum + i
+fef42623   → sw    a5, -20(s0)       # sum ← a5
+fe842783   → lw    a5, -24(s0)       # a5 ← i
+00178793   → addi  a5, a5, 1         # a5 = i + 1
+fef42423   → sw    a5, -24(s0)       # i ← a5
+fe842703   → lw    a4, -24(s0)       # a4 ← i
+fe442783   → lw    a5, -28(s0)       # a5 ← unused
+fcf74ee3   → blt   a4, a5, -20       # if (i < unused) loop
+fe042423   → sw    zero, -28(s0)     # unused ← 0
+0200006f   → jal   zero,  +32        # 무조건 점프: PC += 32
+fec42703   → lw    a4, -20(s0)       # a4 ← sum
+fe842783   → lw    a5, -24(s0)       # a5 ← i
+00f707b3   → add   a5, a4, a5        # a5 = sum + i
+fef42623   → sw    a5, -20(s0)       # sum ← a5
+fe842783   → lw    a5, -24(s0)       # a5 ← i
+00178793   → addi  a5, a5, 1         # a5 = i + 1
+fef42423   → sw    a5, -24(s0)       # i ← a5
+fe842703   → lw    a4, -24(s0)       # a4 ← i
+00900793   → addi  a5, zero, 9       # a5 ← 9              
+fce7dee3   → bge   a5, a4, -40       # if (9 ≥ i) loop
+fec42803   → lw    a6, -20(s0)       # a6 ← sum
+00000013   → nop                     # no operation
+01c12403   → lw    ra, 28(sp)        # ra 복원
+02010113   → addi  sp, sp, 32        # sp += 32
+00a00893   → addi  a7, zero, 10      # a7 ← 10
+00000073   → ecall                   # 환경 호출
+

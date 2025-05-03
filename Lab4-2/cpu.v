@@ -172,13 +172,15 @@ module cpu(input reset,       // positive reset signal
       IF_ID_inst <= 32'b0;
       IF_ID_pc <= 32'b0;
     end
-    else if (!is_stall) begin
+    if (!is_stall) begin
       IF_ID_inst <= instruction;
       IF_ID_pc <= current_pc;
     end
     else if (is_flush) begin
       IF_ID_inst <= 32'b0;
     end
+    
+    
   end
 
 
@@ -251,7 +253,7 @@ module cpu(input reset,       // positive reset signal
       ID_EX_alu_src <= alu_src;
       ID_EX_alu_op <= alu_op;
       ID_EX_mem_to_reg <= mem_to_reg;
-      ID_EX_is_halted <= halt_sim;
+      
       if (is_stall) begin
         ID_EX_mem_write <= 1'b0;
         ID_EX_reg_write <= 1'b0;
@@ -261,7 +263,10 @@ module cpu(input reset,       // positive reset signal
         ID_EX_mem_write <= 1'b0;
         ID_EX_reg_write <= 1'b0;
         ID_EX_mem_read <= 1'b0;
+        ID_EX_is_halted <= 1'b0;
+        
       end
+      
       else begin
         ID_EX_mem_write <= mem_write;
         ID_EX_reg_write <= reg_write;
@@ -316,7 +321,7 @@ module cpu(input reset,       // positive reset signal
     .rs2(alu_forward_data_2),             // input
     .opcode(ID_EX_inst[6:0]),             // input
     .funct3(ID_EX_inst[14:12]),           // input
-    .branch_addr(branch_addr),                // output
+    .branch_addr(branch_addr),            // output
     .is_flush(is_flush)                   // output
   );
 
