@@ -8,7 +8,8 @@ module ControlUnit(
     output reg alu_src,
     output reg reg_write,
     output reg [1:0] alu_op,
-    output reg is_ecall
+    output reg is_ecall,
+    output reg is_jump
     );
 
    always @(*) begin
@@ -19,6 +20,7 @@ module ControlUnit(
         reg_write = 1'b0;
         alu_op = 2'b00;
         is_ecall = 1'b0;
+        is_jump = 1'b0;
         case(opcode)
             `ARITHMETIC : begin
                 reg_write = 1'b1;
@@ -42,7 +44,8 @@ module ControlUnit(
                 alu_op = 2'b11;
             end
             `ECALL : is_ecall = 1'b1;
-            
+            `JAL : is_jump = 1'b1;
+            `JALR : is_jump = 1'b1;
             default : ;
         endcase
     end

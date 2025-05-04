@@ -11,9 +11,14 @@ module PC(
 		if (reset) begin
 			current_pc <= 0;
 		end
-		else if (!is_stall || is_flush) begin
+		else if (is_stall) begin
+			current_pc <= current_pc;
+		end
+		else if (is_flush) begin
 			current_pc <= next_pc;
 		end
-
+		else begin
+			current_pc <= next_pc;
+		end
 	end
 endmodule 

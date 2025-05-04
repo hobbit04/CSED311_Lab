@@ -37,6 +37,7 @@ module cpu(input reset,       // positive reset signal
   wire [1:0] alu_op;
   wire is_ecall;
   wire halt_sim;
+  wire is_jump;
   // Non-control related
   wire [4:0] rs1_in;
   wire [31:0] rs1_data;
@@ -87,6 +88,7 @@ module cpu(input reset,       // positive reset signal
   reg [4:0] ID_EX_rd;
   reg [31:0] ID_EX_pc; // for branch unit
   reg [31:0] ID_EX_inst;
+  reg ID_EX_is_jump;
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -99,6 +101,8 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] EX_MEM_alu_out;
   reg [31:0] EX_MEM_dmem_data;
   reg [4:0] EX_MEM_rd;
+  reg EX_MEM_is_jump;
+  reg [31:0] EX_MEM_pc_plus_4;
 
   /***** MEM/WB pipeline registers *****/
   // From the control unit
@@ -109,6 +113,8 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] MEM_WB_mem_to_reg_src_1;
   reg [31:0] MEM_WB_mem_to_reg_src_2;
   reg [4:0] MEM_WB_rd;
+  reg MEM_WB_is_jump;
+  reg [31:0] MEM_WB_pc_plus_4;
 
 
 
@@ -175,11 +181,11 @@ module cpu(input reset,       // positive reset signal
     end
     else if (is_stall) begin
       IF_ID_inst <= IF_ID_inst;
-      // IF_ID_pc <= current_pc;
+      IF_ID_pc <= IF_ID_pc;
     end
     else if (is_flush) begin
       IF_ID_inst <= 32'b0;
-      // IF_ID_pc <= current_pc;
+      IF_ID_pc <= 32'b0;
     end
     else begin
       IF_ID_inst <= instruction;
@@ -223,7 +229,8 @@ module cpu(input reset,       // positive reset signal
     .alu_src(alu_src),          // output
     .reg_write(reg_write),      // output
     .alu_op(alu_op),            // output
-    .is_ecall(is_ecall)         // output (ecall inst)
+    .is_ecall(is_ecall),         // output (ecall inst)
+    .is_jump(is_jump)   // output (jal inst)
   );
 
   // ---------- Immediate Generator ----------
@@ -243,6 +250,7 @@ module cpu(input reset,       // positive reset signal
       ID_EX_mem_to_reg <= 1'b0;
       ID_EX_reg_write <= 1'b0;
       ID_EX_is_halted <= 1'b0;
+      ID_EX_is_jump <= 1'b0;
       // Non-control values
       ID_EX_rs1_data <= 32'b0;
       ID_EX_rs2_data <= 32'b0;
@@ -253,6 +261,7 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rd <= 5'b0;
       ID_EX_pc <= 32'b0;
       ID_EX_inst <= 32'b0;
+      ID_EX_is_jump <= 1'b0;
     end
     else begin
       // Control values
@@ -265,19 +274,25 @@ module cpu(input reset,       // positive reset signal
         ID_EX_reg_write <= 1'b0;
         ID_EX_mem_read <= 1'b0;
         ID_EX_inst <= 0;
+        ID_EX_pc <= 32'b0;
+        ID_EX_is_jump <= 1'b0;
       end
       else if (is_stall) begin
         ID_EX_mem_write <= 1'b0;
         ID_EX_reg_write <= 1'b0;
         ID_EX_mem_read <= mem_read;
         ID_EX_inst <= ID_EX_inst;
+        ID_EX_pc <= ID_EX_pc;
+        ID_EX_is_jump <= ID_EX_is_jump;
       end
       
       else begin
         ID_EX_mem_write <= mem_write;
-        ID_EX_reg_write <= reg_write;
+        ID_EX_reg_write <= (reg_write || ID_EX_is_jump);
         ID_EX_mem_read <= mem_read;
         ID_EX_inst <= IF_ID_inst;
+        ID_EX_pc <= IF_ID_pc;
+        ID_EX_is_jump <= is_jump;
       end
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
@@ -287,7 +302,8 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs1 <= rs1_in;
       ID_EX_rs2 <= IF_ID_inst[24:20];
       ID_EX_rd <= IF_ID_inst[11:7];
-      ID_EX_pc <= IF_ID_pc;
+      
+      
     end
   end
 
@@ -344,18 +360,22 @@ module cpu(input reset,       // positive reset signal
       EX_MEM_alu_out <= 32'b0;
       EX_MEM_dmem_data <= 32'b0;
       EX_MEM_rd <= 5'b0;
+      EX_MEM_is_jump <= 1'b0;
+      EX_MEM_pc_plus_4 <= 32'b0;
     end
     else begin
       // Control values
       EX_MEM_mem_write <= ID_EX_mem_write;
       EX_MEM_mem_read <= ID_EX_mem_read;
       EX_MEM_mem_to_reg <= ID_EX_mem_to_reg;
-      EX_MEM_reg_write <= ID_EX_reg_write;
+      EX_MEM_reg_write <= ID_EX_reg_write || ID_EX_is_jump;
       EX_MEM_is_halted <= ID_EX_is_halted;
+      EX_MEM_is_jump <= ID_EX_is_jump;
       // Non-control values
       EX_MEM_alu_out <= alu_result;
       EX_MEM_dmem_data <= alu_forward_data_2;
       EX_MEM_rd <= ID_EX_rd;
+      EX_MEM_pc_plus_4 <= ID_EX_pc + 4; 
     end
   end
 
@@ -382,20 +402,24 @@ module cpu(input reset,       // positive reset signal
       MEM_WB_mem_to_reg <= 1'b0;
       MEM_WB_reg_write <= 1'b0;
       MEM_WB_is_halted <= 1'b0;
+      MEM_WB_is_jump <= 1'b0;
       // Non-control values
       MEM_WB_rd <= 5'b0;
       MEM_WB_mem_to_reg_src_1 <= 32'b0;
       MEM_WB_mem_to_reg_src_2 <= 32'b0;
+      MEM_WB_pc_plus_4 <= 32'b0;
     end
     else begin
       // Control values
       MEM_WB_mem_to_reg <= EX_MEM_mem_to_reg;
       MEM_WB_reg_write <= EX_MEM_reg_write;
       MEM_WB_is_halted <= EX_MEM_is_halted;
+      MEM_WB_is_jump <= EX_MEM_is_jump;
       // Non-control values
       MEM_WB_rd <= EX_MEM_rd;
       MEM_WB_mem_to_reg_src_1 <= EX_MEM_alu_out;
       MEM_WB_mem_to_reg_src_2 <= mem_data;
+      MEM_WB_pc_plus_4 <= EX_MEM_pc_plus_4;
     end
   end
 
@@ -405,5 +429,6 @@ module cpu(input reset,       // positive reset signal
 
   /******* WB STAGE *******/
   assign is_halted = MEM_WB_is_halted;
-  assign writeback_data = MEM_WB_mem_to_reg ? MEM_WB_mem_to_reg_src_2 : MEM_WB_mem_to_reg_src_1;
+  assign writeback_data = MEM_WB_is_jump ? MEM_WB_pc_plus_4 : 
+                        MEM_WB_mem_to_reg ? MEM_WB_mem_to_reg_src_2 : MEM_WB_mem_to_reg_src_1;
 endmodule

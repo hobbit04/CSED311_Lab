@@ -38,6 +38,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*1:0*/ top__DOT__cpu__DOT__alu_op;
         CData/*0:0*/ top__DOT__cpu__DOT__is_ecall;
         CData/*0:0*/ top__DOT__cpu__DOT__halt_sim;
+        CData/*0:0*/ top__DOT__cpu__DOT__is_jump;
         CData/*4:0*/ top__DOT__cpu__DOT__rs1_in;
         CData/*3:0*/ top__DOT__cpu__DOT__alu_control;
         CData/*1:0*/ top__DOT__cpu__DOT__ID_EX_alu_op;
@@ -51,16 +52,19 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*4:0*/ top__DOT__cpu__DOT__ID_EX_rs1;
         CData/*4:0*/ top__DOT__cpu__DOT__ID_EX_rs2;
         CData/*4:0*/ top__DOT__cpu__DOT__ID_EX_rd;
+        CData/*0:0*/ top__DOT__cpu__DOT__ID_EX_is_jump;
         CData/*0:0*/ top__DOT__cpu__DOT__EX_MEM_mem_write;
         CData/*0:0*/ top__DOT__cpu__DOT__EX_MEM_mem_read;
         CData/*0:0*/ top__DOT__cpu__DOT__EX_MEM_mem_to_reg;
         CData/*0:0*/ top__DOT__cpu__DOT__EX_MEM_reg_write;
         CData/*0:0*/ top__DOT__cpu__DOT__EX_MEM_is_halted;
         CData/*4:0*/ top__DOT__cpu__DOT__EX_MEM_rd;
+        CData/*0:0*/ top__DOT__cpu__DOT__EX_MEM_is_jump;
         CData/*0:0*/ top__DOT__cpu__DOT__MEM_WB_mem_to_reg;
         CData/*0:0*/ top__DOT__cpu__DOT__MEM_WB_reg_write;
         CData/*0:0*/ top__DOT__cpu__DOT__MEM_WB_is_halted;
         CData/*4:0*/ top__DOT__cpu__DOT__MEM_WB_rd;
+        CData/*0:0*/ top__DOT__cpu__DOT__MEM_WB_is_jump;
         CData/*4:0*/ top__DOT__cpu__DOT__stall_detection__DOT__ID_rs1;
         CData/*4:0*/ top__DOT__cpu__DOT__stall_detection__DOT__ID_rs2;
         CData/*6:0*/ top__DOT__cpu__DOT__stall_detection__DOT__ID_opcode;
@@ -76,12 +80,12 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*0:0*/ top__DOT__cpu__DOT__stall_detection__DOT__use_rs1;
         CData/*0:0*/ top__DOT__cpu__DOT__stall_detection__DOT__use_rs2;
         CData/*0:0*/ top__DOT__cpu__DOT__stall_detection__DOT__stall_by_load;
+    };
+    struct {
         CData/*0:0*/ top__DOT__cpu__DOT__stall_detection__DOT__stall_by_ecall;
         CData/*4:0*/ top__DOT__cpu__DOT__forwarding_unit__DOT__EX_rs1;
         CData/*4:0*/ top__DOT__cpu__DOT__forwarding_unit__DOT__EX_rs2;
         CData/*4:0*/ top__DOT__cpu__DOT__forwarding_unit__DOT__MEM_rd;
-    };
-    struct {
         CData/*0:0*/ top__DOT__cpu__DOT__forwarding_unit__DOT__MEM_reg_write;
         CData/*4:0*/ top__DOT__cpu__DOT__forwarding_unit__DOT__WB_rd;
         CData/*0:0*/ top__DOT__cpu__DOT__forwarding_unit__DOT__WB_reg_write;
@@ -108,6 +112,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*0:0*/ top__DOT__cpu__DOT__ctrl_unit__DOT__reg_write;
         CData/*1:0*/ top__DOT__cpu__DOT__ctrl_unit__DOT__alu_op;
         CData/*0:0*/ top__DOT__cpu__DOT__ctrl_unit__DOT__is_ecall;
+        CData/*0:0*/ top__DOT__cpu__DOT__ctrl_unit__DOT__is_jump;
         CData/*6:0*/ top__DOT__cpu__DOT__imm_gen__DOT__opcode;
         CData/*3:0*/ top__DOT__cpu__DOT__alu_ctrl_unit__DOT__functs;
         CData/*1:0*/ top__DOT__cpu__DOT__alu_ctrl_unit__DOT__alu_op;
@@ -120,6 +125,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__clk;
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__mem_read;
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__mem_write;
+        CData/*0:0*/ __Vdly__top__DOT__cpu__DOT__ID_EX_is_jump;
         CData/*0:0*/ __VstlFirstIteration;
         CData/*0:0*/ __VicoFirstIteration;
         CData/*0:0*/ __Vtrigprevexpr___TOP__clk__0;
@@ -140,18 +146,20 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         IData/*31:0*/ top__DOT__cpu__DOT__mem_data;
         IData/*31:0*/ top__DOT__cpu__DOT__writeback_data;
         IData/*31:0*/ top__DOT__cpu__DOT__IF_ID_inst;
+    };
+    struct {
         IData/*31:0*/ top__DOT__cpu__DOT__IF_ID_pc;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_rs1_data;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_rs2_data;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_imm;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_pc;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_inst;
-    };
-    struct {
         IData/*31:0*/ top__DOT__cpu__DOT__EX_MEM_alu_out;
         IData/*31:0*/ top__DOT__cpu__DOT__EX_MEM_dmem_data;
+        IData/*31:0*/ top__DOT__cpu__DOT__EX_MEM_pc_plus_4;
         IData/*31:0*/ top__DOT__cpu__DOT__MEM_WB_mem_to_reg_src_1;
         IData/*31:0*/ top__DOT__cpu__DOT__MEM_WB_mem_to_reg_src_2;
+        IData/*31:0*/ top__DOT__cpu__DOT__MEM_WB_pc_plus_4;
         IData/*31:0*/ top__DOT__cpu__DOT__pc__DOT__next_pc;
         IData/*31:0*/ top__DOT__cpu__DOT__pc__DOT__current_pc;
         IData/*31:0*/ top__DOT__cpu__DOT__imem__DOT__addr;

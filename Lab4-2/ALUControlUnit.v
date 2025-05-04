@@ -11,7 +11,7 @@ module ALUControlUnit(
     // alu_op = 00 then ALU R-type operation.
     // alu_op = 01 then ALU I-type operation.
     // alu_op = 10 then branch.
-    // alu_op = 11 then add.
+    // alu_op = 11 then JAL/JALR.
     always @(*) begin
         case (alu_op)
             2'b00, 2'b01: begin
