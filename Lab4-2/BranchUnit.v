@@ -41,4 +41,6 @@ module BranchUnit(
             end
         endcase
     end
+
+    // 현재 문제 상황. branch를 taken 했는데, IF 단계에 있던 jal이 nop로 바뀌지 않음.. 그러다 jal이 EX 단계에 들어가서 점프를 해버림 -> IF 단계를 확실히 막아줘야!
 endmodule

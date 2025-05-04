@@ -154,6 +154,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),            // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),                // input
     .is_stall(is_stall),      // input
+    .is_flush(is_flush),      // input
     .next_pc(next_pc),        // input
     .current_pc(current_pc)   // output
   );
@@ -167,19 +168,24 @@ module cpu(input reset,       // positive reset signal
   );
 
   // Update IF/ID pipeline registers here
-  always @(posedge clk) begin
+  always @(posedge clk) begin 
     if (reset) begin
       IF_ID_inst <= 32'b0;
       IF_ID_pc <= 32'b0;
     end
-    if (!is_stall) begin
-      IF_ID_inst <= instruction;
-      IF_ID_pc <= current_pc;
+    else if (is_stall) begin
+      IF_ID_inst <= IF_ID_inst;
+      // IF_ID_pc <= current_pc;
     end
     else if (is_flush) begin
       IF_ID_inst <= 32'b0;
+      // IF_ID_pc <= current_pc;
     end
-    
+    else begin
+      IF_ID_inst <= instruction;
+      IF_ID_pc <= current_pc;
+    end
+  
     
   end
 
@@ -253,24 +259,25 @@ module cpu(input reset,       // positive reset signal
       ID_EX_alu_src <= alu_src;
       ID_EX_alu_op <= alu_op;
       ID_EX_mem_to_reg <= mem_to_reg;
-      
-      if (is_stall) begin
-        ID_EX_mem_write <= 1'b0;
-        ID_EX_reg_write <= 1'b0;
-        ID_EX_mem_read <= mem_read;
-      end
-      else if (is_flush) begin
+      ID_EX_is_halted <= halt_sim;
+      if (is_flush) begin
         ID_EX_mem_write <= 1'b0;
         ID_EX_reg_write <= 1'b0;
         ID_EX_mem_read <= 1'b0;
-        ID_EX_is_halted <= 1'b0;
-        
+        ID_EX_inst <= 0;
+      end
+      else if (is_stall) begin
+        ID_EX_mem_write <= 1'b0;
+        ID_EX_reg_write <= 1'b0;
+        ID_EX_mem_read <= mem_read;
+        ID_EX_inst <= ID_EX_inst;
       end
       
       else begin
         ID_EX_mem_write <= mem_write;
         ID_EX_reg_write <= reg_write;
         ID_EX_mem_read <= mem_read;
+        ID_EX_inst <= IF_ID_inst;
       end
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
@@ -281,7 +288,6 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs2 <= IF_ID_inst[24:20];
       ID_EX_rd <= IF_ID_inst[11:7];
       ID_EX_pc <= IF_ID_pc;
-      ID_EX_inst <= IF_ID_inst;
     end
   end
 
@@ -289,7 +295,7 @@ module cpu(input reset,       // positive reset signal
 
 
 
-  /******* EX STAGE *******/
+  /******* EX STAGE *******/ 
   assign alu_forward_data_1 = forward_rs1[1] ? EX_MEM_alu_out :
                           forward_rs1[0] ? writeback_data :
                                            ID_EX_rs1_data;

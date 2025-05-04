@@ -91,6 +91,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*0:0*/ top__DOT__cpu__DOT__pc__DOT__reset;
         CData/*0:0*/ top__DOT__cpu__DOT__pc__DOT__clk;
         CData/*0:0*/ top__DOT__cpu__DOT__pc__DOT__is_stall;
+        CData/*0:0*/ top__DOT__cpu__DOT__pc__DOT__is_flush;
         CData/*0:0*/ top__DOT__cpu__DOT__imem__DOT__reset;
         CData/*0:0*/ top__DOT__cpu__DOT__imem__DOT__clk;
         CData/*0:0*/ top__DOT__cpu__DOT__reg_file__DOT__reset;
@@ -145,9 +146,9 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_imm;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_pc;
         IData/*31:0*/ top__DOT__cpu__DOT__ID_EX_inst;
-        IData/*31:0*/ top__DOT__cpu__DOT__EX_MEM_alu_out;
     };
     struct {
+        IData/*31:0*/ top__DOT__cpu__DOT__EX_MEM_alu_out;
         IData/*31:0*/ top__DOT__cpu__DOT__EX_MEM_dmem_data;
         IData/*31:0*/ top__DOT__cpu__DOT__MEM_WB_mem_to_reg_src_1;
         IData/*31:0*/ top__DOT__cpu__DOT__MEM_WB_mem_to_reg_src_2;
@@ -176,6 +177,7 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__dout;
         IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__i;
         IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__dmem_addr;
+        IData/*31:0*/ __Vdly__top__DOT__cpu__DOT__IF_ID_inst;
         IData/*31:0*/ __VactIterCount;
         VL_OUT(print_reg[32],31,0);
         VlUnpacked<IData/*31:0*/, 32> top__DOT__print_reg;
