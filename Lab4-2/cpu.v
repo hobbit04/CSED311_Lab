@@ -160,7 +160,6 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),            // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),                // input
     .is_stall(is_stall),      // input
-    .is_flush(is_flush),      // input
     .next_pc(next_pc),        // input
     .current_pc(current_pc)   // output
   );
@@ -179,20 +178,10 @@ module cpu(input reset,       // positive reset signal
       IF_ID_inst <= 32'b0;
       IF_ID_pc <= 32'b0;
     end
-    else if (is_stall) begin
-      IF_ID_inst <= IF_ID_inst;
-      IF_ID_pc <= IF_ID_pc;
-    end
-    else if (is_flush) begin
-      IF_ID_inst <= 32'b0;
-      IF_ID_pc <= 32'b0;
-    end
-    else begin
+    else if ((!is_stall) && (!is_flush)) begin
       IF_ID_inst <= instruction;
       IF_ID_pc <= current_pc;
     end
-  
-    
   end
 
 
@@ -261,38 +250,22 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rd <= 5'b0;
       ID_EX_pc <= 32'b0;
       ID_EX_inst <= 32'b0;
-      ID_EX_is_jump <= 1'b0;
     end
     else begin
       // Control values
       ID_EX_alu_src <= alu_src;
       ID_EX_alu_op <= alu_op;
+      ID_EX_mem_read <= mem_read;
       ID_EX_mem_to_reg <= mem_to_reg;
       ID_EX_is_halted <= halt_sim;
-      if (is_flush) begin
+      ID_EX_is_jump <= is_jump;
+      if (is_stall || is_flush) begin
         ID_EX_mem_write <= 1'b0;
         ID_EX_reg_write <= 1'b0;
-        ID_EX_mem_read <= 1'b0;
-        ID_EX_inst <= 0;
-        ID_EX_pc <= 32'b0;
-        ID_EX_is_jump <= 1'b0;
       end
-      else if (is_stall) begin
-        ID_EX_mem_write <= 1'b0;
-        ID_EX_reg_write <= 1'b0;
-        ID_EX_mem_read <= mem_read;
-        ID_EX_inst <= ID_EX_inst;
-        ID_EX_pc <= ID_EX_pc;
-        ID_EX_is_jump <= ID_EX_is_jump;
-      end
-      
       else begin
         ID_EX_mem_write <= mem_write;
-        ID_EX_reg_write <= (reg_write || ID_EX_is_jump);
-        ID_EX_mem_read <= mem_read;
-        ID_EX_inst <= IF_ID_inst;
-        ID_EX_pc <= IF_ID_pc;
-        ID_EX_is_jump <= is_jump;
+        ID_EX_reg_write <= reg_write;
       end
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
@@ -302,8 +275,8 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs1 <= rs1_in;
       ID_EX_rs2 <= IF_ID_inst[24:20];
       ID_EX_rd <= IF_ID_inst[11:7];
-      
-      
+      ID_EX_inst <= IF_ID_inst;
+      ID_EX_pc <= IF_ID_pc;
     end
   end
 
