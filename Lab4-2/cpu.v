@@ -58,7 +58,9 @@ module cpu(input reset,       // positive reset signal
   wire actual_branch_taken;
   wire [31:0] branch_addr;
   wire [31:0] actual_addr;
+  wire [31:0] addr_for_BTB;
   wire prediction_wrong;
+
 
   /***** MEM Stage wires *****/
   wire [31:0] mem_data;
@@ -174,7 +176,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),                                    // input
 	  .clk(clk),                                        // input
 	  .pc_for_update(ID_EX_pc),                         // input (For updates)
-	  .update_next_pc(actual_addr),                     // input (For updates)
+	  .update_BTB(addr_for_BTB),                        // input (For updates)
 	  .update_taken(actual_branch_taken),               // input (For updates)
 	  .current_pc(current_pc),                          // input (For prediction generation)
 	  .predicted_next_pc(predicted_next_pc),            // output (Prediction)
@@ -330,10 +332,9 @@ module cpu(input reset,       // positive reset signal
   assign alu_in_2 = ID_EX_alu_src ? ID_EX_imm : alu_forward_data_2;
 
   // jalr will use alu_result
-  // jal or successful branch will have pc + imm
+  // jal or branch will have pc + imm
   // all other will have pc+4 (enforced by actual_branch_taken being false)
   assign branch_addr = ID_EX_is_jalr ? alu_result : ID_EX_pc + ID_EX_imm;
-  
   assign actual_branch_taken = ID_EX_is_jal || ID_EX_is_jalr || (alu_bcond && ID_EX_branch);
   assign actual_addr = actual_branch_taken ? branch_addr : ID_EX_pc + 4;
   
@@ -343,6 +344,9 @@ module cpu(input reset,       // positive reset signal
           ID_EX_predicted_branch_taken != actual_branch_taken ||
           ID_EX_predicted_next_pc      != actual_addr
       ); 
+
+  // Assumption: BTB doesn't store JALR values
+  assign addr_for_BTB = (ID_EX_is_jal || ID_EX_branch) ? branch_addr : ID_EX_pc + 4;
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (

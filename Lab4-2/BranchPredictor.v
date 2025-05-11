@@ -2,7 +2,7 @@ module BranchPredictor(
     input reset,
 	input clk,
 	input [31:0] pc_for_update,
-	input [31:0] update_next_pc,
+	input [31:0] update_BTB,
 	input update_taken,
 	input [31:0] current_pc,
 	output [31:0] predicted_next_pc,
@@ -27,7 +27,7 @@ module BranchPredictor(
         end else begin
             last_update_pc        <= pc_for_update;
             last_update_taken     <= update_taken;
-            last_update_next_pc   <= update_next_pc;
+            last_update_next_pc   <= update_BTB;
         end
     end
 
