@@ -24,6 +24,8 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] current_pc;
   wire [31:0] next_pc;
   wire [31:0] instruction;
+  wire [31:0] predicted_next_pc;
+  wire predicted_branch_taken;
 
   /***** ID Stage wires *****/
   // Control related
@@ -53,8 +55,10 @@ module cpu(input reset,       // positive reset signal
   wire alu_bcond;
   wire [31:0] alu_forward_data_1;
   wire [31:0] alu_forward_data_2;
-  wire branch_taken;
+  wire actual_branch_taken;
   wire [31:0] branch_addr;
+  wire [31:0] actual_addr;
+  wire prediction_wrong;
 
   /***** MEM Stage wires *****/
   wire [31:0] mem_data;
@@ -70,8 +74,10 @@ module cpu(input reset,       // positive reset signal
   // 2. You might not need registers described below
 
   /***** IF/ID pipeline registers *****/
-  reg [31:0] IF_ID_inst;           // will be used in ID stage
-  reg [31:0] IF_ID_pc;             // will be used in EX stage (for branching)
+  reg [31:0] IF_ID_inst;                // will be used in ID stage
+  reg [31:0] IF_ID_pc;                  // will be used in EX stage (for branching)
+  reg [31:0] IF_ID_predicted_next_pc;   // for prediction correctness check
+  reg IF_ID_predicted_branch_taken;     // for prediction correctness check
 
   /***** ID/EX pipeline registers *****/
   // From the control unit
@@ -95,6 +101,8 @@ module cpu(input reset,       // positive reset signal
   reg [4:0] ID_EX_rs2;
   reg [4:0] ID_EX_rd;
   reg [31:0] ID_EX_pc;      // will be used in EX stage (for branching)
+  reg [31:0] ID_EX_predicted_next_pc;   // for prediction correctness check
+  reg ID_EX_predicted_branch_taken;     // for prediction correctness check
 
   /***** EX/MEM pipeline registers *****/
   // From the control unit
@@ -159,7 +167,20 @@ module cpu(input reset,       // positive reset signal
 
 
   /******* IF STAGE *******/
-  assign next_pc = branch_taken ? branch_addr : current_pc + 4; // Next instruction
+  assign next_pc = prediction_wrong ? actual_addr : predicted_next_pc;
+
+  // ---------- Branch Predictor ----------
+  BranchPredictor branch_predictor(
+    .reset(reset),                                    // input
+	  .clk(clk),                                        // input
+	  .pc_for_update(ID_EX_pc),                         // input (For updates)
+	  .update_next_pc(actual_addr),                     // input (For updates)
+	  .update_taken(actual_branch_taken),               // input (For updates)
+	  .current_pc(current_pc),                          // input (For prediction generation)
+	  .predicted_next_pc(predicted_next_pc),            // output (Prediction)
+    .predicted_branch_taken(predicted_branch_taken)   // output (Prediction)
+	);
+
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
@@ -180,13 +201,17 @@ module cpu(input reset,       // positive reset signal
 
   // Update IF/ID pipeline registers here
   always @(posedge clk) begin 
-    if (reset || branch_taken) begin
+    if (reset || prediction_wrong) begin
       IF_ID_inst <= 32'b0;
       IF_ID_pc <= 32'b0;
+      IF_ID_predicted_next_pc <= 32'b0;
+      IF_ID_predicted_branch_taken <= 1'b0;
     end
     else if (!is_stall) begin
       IF_ID_inst <= instruction;
       IF_ID_pc <= current_pc;
+      IF_ID_predicted_next_pc <= predicted_next_pc;
+      IF_ID_predicted_branch_taken <= predicted_branch_taken;
     end
   end
 
@@ -239,7 +264,7 @@ module cpu(input reset,       // positive reset signal
 
   // Update ID/EX pipeline registers here
   always @(posedge clk) begin
-    if (reset || branch_taken || is_stall) begin
+    if (reset || prediction_wrong || is_stall) begin
       // Control values
       ID_EX_alu_src <= 1'b0;
       ID_EX_alu_op <= 2'b00;
@@ -261,6 +286,8 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs2 <= 5'b0;
       ID_EX_rd <= 5'b0;
       ID_EX_pc <= 32'b0;
+      ID_EX_predicted_next_pc <= 32'b0;
+      ID_EX_predicted_branch_taken <= 1'b0;
     end
     else begin
       // Control values
@@ -284,6 +311,8 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs2 <= IF_ID_inst[24:20];
       ID_EX_rd <= IF_ID_inst[11:7];     
       ID_EX_pc <= IF_ID_pc;
+      ID_EX_predicted_next_pc <= IF_ID_predicted_next_pc;
+      ID_EX_predicted_branch_taken <= IF_ID_predicted_branch_taken;
     end
   end
 
@@ -299,12 +328,21 @@ module cpu(input reset,       // positive reset signal
                           forward_rs2[0] ? writeback_data :
                                            ID_EX_rs2_data;
   assign alu_in_2 = ID_EX_alu_src ? ID_EX_imm : alu_forward_data_2;
-  assign branch_taken = ID_EX_is_jal || ID_EX_is_jalr || (alu_bcond && ID_EX_branch);
+
   // jalr will use alu_result
-  // jal or branch will have pc + imm
-  // all other will have pc+4 (enforced by branch_taken being false)
+  // jal or successful branch will have pc + imm
+  // all other will have pc+4 (enforced by actual_branch_taken being false)
   assign branch_addr = ID_EX_is_jalr ? alu_result : ID_EX_pc + ID_EX_imm;
-  //  assign true_addr = 
+  
+  assign actual_branch_taken = ID_EX_is_jal || ID_EX_is_jalr || (alu_bcond && ID_EX_branch);
+  assign actual_addr = actual_branch_taken ? branch_addr : ID_EX_pc + 4;
+  
+  assign prediction_wrong =
+      (ID_EX_predicted_next_pc != 32'b0) &&
+      (
+          ID_EX_predicted_branch_taken != actual_branch_taken ||
+          ID_EX_predicted_next_pc      != actual_addr
+      ); 
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (
