@@ -180,19 +180,13 @@ module cpu(input reset,       // positive reset signal
 
   // Update IF/ID pipeline registers here
   always @(posedge clk) begin 
-    if (reset) begin
+    if (reset || branch_taken) begin
       IF_ID_inst <= 32'b0;
       IF_ID_pc <= 32'b0;
     end
     else if (!is_stall) begin
-      if (branch_taken) begin
-        IF_ID_inst <= 32'b0;
-        IF_ID_pc <= 32'b0;
-      end
-      else begin
-        IF_ID_inst <= instruction;
-        IF_ID_pc <= current_pc;
-      end
+      IF_ID_inst <= instruction;
+      IF_ID_pc <= current_pc;
     end
   end
 
@@ -245,7 +239,7 @@ module cpu(input reset,       // positive reset signal
 
   // Update ID/EX pipeline registers here
   always @(posedge clk) begin
-    if (reset) begin
+    if (reset || branch_taken || is_stall) begin
       // Control values
       ID_EX_alu_src <= 1'b0;
       ID_EX_alu_op <= 2'b00;
@@ -258,31 +252,6 @@ module cpu(input reset,       // positive reset signal
       ID_EX_is_jalr <= 1'b0;
       ID_EX_branch <= 1'b0;
       ID_EX_pc_to_reg <= 1'b0;
-      // Non-control values
-      ID_EX_rs1_data <= 32'b0;
-      ID_EX_rs2_data <= 32'b0;
-      ID_EX_imm <= 32'b0;
-      ID_EX_ALU_ctrl_unit_input <= 4'b0;
-      ID_EX_rs1 <= 5'b0;
-      ID_EX_rs2 <= 5'b0;
-      ID_EX_rd <= 5'b0;
-      ID_EX_pc <= 32'b0;
-    end
-    else if (branch_taken) begin
-      // Control values
-      ID_EX_alu_src <= 1'b0;
-      ID_EX_alu_op <= 2'b00;
-      ID_EX_mem_read <= 1'b0;
-      ID_EX_mem_write <= 1'b0;
-      ID_EX_mem_to_reg <= 1'b0;
-      ID_EX_reg_write <= 1'b0;
-      ID_EX_is_halted <= 1'b0;
-      ID_EX_is_jal <= 1'b0;
-      ID_EX_is_jalr <= 1'b0;
-      ID_EX_branch <= 1'b0;
-      ID_EX_pc_to_reg <= 1'b0;
-      ID_EX_mem_write <= 1'b0;
-      ID_EX_reg_write <= 1'b0;
       // Non-control values
       ID_EX_rs1_data <= 32'b0;
       ID_EX_rs2_data <= 32'b0;
@@ -300,20 +269,12 @@ module cpu(input reset,       // positive reset signal
       ID_EX_mem_read <= mem_read;
       ID_EX_mem_to_reg <= mem_to_reg;
       ID_EX_is_halted <= halt_sim;
+      ID_EX_pc_to_reg <= pc_to_reg;
       ID_EX_is_jal <= is_jal;
       ID_EX_is_jalr <= is_jalr;
-
-      ID_EX_pc_to_reg <= pc_to_reg;
-      if (is_stall) begin
-        ID_EX_branch <= 1'b0;
-        ID_EX_mem_write <= 1'b0;
-        ID_EX_reg_write <= 1'b0;
-      end
-      else begin
-        ID_EX_branch <= branch;
-        ID_EX_mem_write <= mem_write;
-        ID_EX_reg_write <= reg_write;
-      end
+      ID_EX_branch <= branch;
+      ID_EX_mem_write <= mem_write;
+      ID_EX_reg_write <= reg_write;
       // Non-control values
       ID_EX_rs1_data <= rs1_data;
       ID_EX_rs2_data <= rs2_data;
@@ -343,6 +304,7 @@ module cpu(input reset,       // positive reset signal
   // jal or branch will have pc + imm
   // all other will have pc+4 (enforced by branch_taken being false)
   assign branch_addr = ID_EX_is_jalr ? alu_result : ID_EX_pc + ID_EX_imm;
+  //  assign true_addr = 
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (
