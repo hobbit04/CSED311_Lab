@@ -58,7 +58,6 @@ module cpu(input reset,       // positive reset signal
   wire actual_branch_taken;
   wire [31:0] branch_addr;
   wire [31:0] actual_addr;
-  wire [31:0] addr_for_BTB;
   wire [31:0] update_pc;
   wire prediction_wrong;
 
@@ -176,7 +175,7 @@ module cpu(input reset,       // positive reset signal
     .reset(reset),                                    // input
 	  .clk(clk),                                        // input
 	  .update_pc(update_pc),                            // input (For updates)
-	  .update_BTB(addr_for_BTB),                        // input (For updates)
+	  .update_BTB(branch_addr),                         // input (For updates)
 	  .update_taken(actual_branch_taken),               // input (For updates)
 	  .current_pc(current_pc),                          // input (For prediction generation)
 	  .predicted_next_pc(predicted_next_pc),            // output (Prediction)
@@ -346,7 +345,6 @@ module cpu(input reset,       // positive reset signal
       ); 
 
   // Assumption: BTB doesn't store JALR values
-  assign addr_for_BTB = (ID_EX_is_jal || ID_EX_branch) ? branch_addr : ID_EX_pc + 4;
   assign update_pc = (ID_EX_is_jal || ID_EX_branch) ? ID_EX_pc : 32'b0;
 
   // ---------- ALU Control Unit ----------
