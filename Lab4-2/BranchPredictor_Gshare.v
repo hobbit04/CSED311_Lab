@@ -27,12 +27,26 @@ module BranchPredictor_Gshare(
 	wire [4:0] update_BTB_index;
 	wire [4:0] update_PHT_index;
 	
+	assign update_BTB_index = update_pc[4:0];
+	assign update_PHT_index = ID_EX_PHT_index;
+
+	// Mini-pipelining for proper PHT index when updating
+	// (The updated PHT entry must be the accessed PHT entry!!)
+	reg [4:0] IF_ID_PHT_index;
+	reg [4:0] ID_EX_PHT_index;
+	always @(posedge clk) begin
+		if (reset) begin
+			IF_ID_PHT_index <= 5'b0;
+			ID_EX_PHT_index <= 5'b0;
+		end
+		else begin
+			IF_ID_PHT_index <= predict_PHT_index;
+			ID_EX_PHT_index <= IF_ID_PHT_index;
+		end
+	end
+	
 	wire [4:0] predict_BTB_index;
 	wire [4:0] predict_PHT_index;
-
-	assign update_BTB_index = update_pc[4:0];
-	assign update_PHT_index = update_pc[4:0];
-	// This needs update so that the ACCESSED PHT ENTRY will be the UPDATED PHT ENTRY
 	
 	assign predict_BTB_index = current_pc[4:0];
 	assign predict_PHT_index = current_pc[4:0] ^ BHSR[4:0];
@@ -44,7 +58,7 @@ module BranchPredictor_Gshare(
 	reg [26:0] 		tag[0:31]; // (32-5)-bit entries; 32 entries.
 	reg 	 	  valid[0:31];
 	reg [1:0] 		PHT[0:31]; // 2-bit counter; 32 entries.
-	reg [6:0] 		BHSR;
+	reg [4:0] 		BHSR;
 
 	always @(posedge clk) begin
 		if (reset) begin
@@ -54,14 +68,14 @@ module BranchPredictor_Gshare(
 				valid[i] <= 1'b0;
     			PHT[i] <= 2'b10;		// Default to guessing weakly taken
 			end
-			BHSR <= 7'b0;
+			BHSR <= 5'b0;
     	end
     	else if (update_pc != ~32'b0) begin
 			tag[update_BTB_index] <= update_pc[31:5];
 			BTB[update_BTB_index] <= update_BTB;
 			valid[update_BTB_index] <= 1'b1;
 			PHT[update_PHT_index] <= next_PHT; 	// Calculated by a 2-bit counter module
-			BHSR <= {BHSR[5:0], update_taken};
+			BHSR <= {BHSR[3:0], update_taken};
     	end
   	end
 
