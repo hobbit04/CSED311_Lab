@@ -171,7 +171,8 @@ module cpu(input reset,       // positive reset signal
   assign next_pc = prediction_wrong ? actual_addr : predicted_next_pc;
 
   // ---------- Branch Predictor ----------
-  BranchPredictor branch_predictor(
+  // Change BranchPredictor_Gshare to other predictors if you want to test them (e.g. BranchPredictor_AlwaysTaken)
+  BranchPredictor_Gshare branch_predictor(
     .reset(reset),                                    // input
 	  .clk(clk),                                        // input
 	  .update_pc(update_pc),                            // input (For updates)
@@ -204,8 +205,8 @@ module cpu(input reset,       // positive reset signal
   always @(posedge clk) begin 
     if (reset || prediction_wrong) begin
       IF_ID_inst <= 32'b0;
-      IF_ID_pc <= 32'b0;
-      IF_ID_predicted_next_pc <= 32'b0;
+      IF_ID_pc <= ~32'b0;
+      IF_ID_predicted_next_pc <= ~32'b0;
       IF_ID_predicted_branch_taken <= 1'b0;
     end
     else if (!is_stall) begin
@@ -286,8 +287,8 @@ module cpu(input reset,       // positive reset signal
       ID_EX_rs1 <= 5'b0;
       ID_EX_rs2 <= 5'b0;
       ID_EX_rd <= 5'b0;
-      ID_EX_pc <= 32'b0;
-      ID_EX_predicted_next_pc <= 32'b0;
+      ID_EX_pc <= ~32'b0;
+      ID_EX_predicted_next_pc <= ~32'b0;
       ID_EX_predicted_branch_taken <= 1'b0;
     end
     else begin
@@ -338,14 +339,14 @@ module cpu(input reset,       // positive reset signal
   assign actual_addr = actual_branch_taken ? branch_addr : ID_EX_pc + 4;
   
   assign prediction_wrong =
-      (ID_EX_predicted_next_pc != 32'b0) &&
+      (ID_EX_predicted_next_pc != ~32'b0) &&
       (
           ID_EX_predicted_branch_taken != actual_branch_taken ||
           ID_EX_predicted_next_pc      != actual_addr
       ); 
 
   // Assumption: BTB doesn't store JALR values
-  assign update_pc = (ID_EX_is_jal || ID_EX_branch) ? ID_EX_pc : 32'b0;
+  assign update_pc = (ID_EX_is_jal || ID_EX_branch) ? ID_EX_pc : ~32'b0;
 
   // ---------- ALU Control Unit ----------
   ALUControlUnit alu_ctrl_unit (

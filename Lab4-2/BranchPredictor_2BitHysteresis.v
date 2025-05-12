@@ -1,4 +1,4 @@
-module BranchPredictor(
+module BranchPredictor_2BitHysteresis(
     input reset,
     input clk,
     // For updating the predictor
@@ -24,45 +24,30 @@ module BranchPredictor(
 
 	wire [1:0] next_PHT;
 
-	// BTB & PHT definition
-	reg [1:0] 		PHT[0:31]; // 2-bit counter; 32 entries.
+	// BTB, PHT definition, initialization and update
 	reg [31:0] 		BTB[0:31]; // 32-bit entries; 32 entries.
 	reg [26:0] 		tag[0:31]; // (32-5)-bit entries; 32 entries.
 	reg 	 	  valid[0:31];
+	reg [1:0] 		PHT[0:31]; // 2-bit counter; 32 entries.
 
-	// Initialization and update of BTB
 	always @(posedge clk) begin
 		if (reset) begin
     		for (i = 0; i < 32; i = i + 1) begin
     			BTB[i] <= 32'b0;
 				tag[i] <= 27'b0;
 				valid[i] <= 1'b0;
+    			PHT[i] <= 2'b10;		// Default to guessing weakly taken
 			end
-    	end
-    	else if (update_pc != 32'b0) begin
-    		// 0. ignore pc if it is 32'b0 (Only branch and JAL is not 32'b0)
-			// 1. find the update_index, which is the lowest 5 bits of update_pc
-			// 2. store tag and BTB
-			// 3. Set valid bit to 1
+		end
+    	else if (update_pc != ~32'b0) begin
 			tag[update_index] <= update_pc[31:5];
 			BTB[update_index] <= update_BTB;
 			valid[update_index] <= 1'b1;
+			PHT[update_index] <= next_PHT; 	// Calculated by a 2-bit counter module
     	end
   	end
 
-	// Initialization and update of PHT (Saturation counter)
-	always @(posedge clk) begin
-		if (reset) begin
-    		for (i = 0; i < 32; i = i + 1) begin
-    			PHT[i] <= 2'b0;
-			end
-    	end
-    	else if (update_pc != 32'b0) begin
-			PHT[update_index] <= next_PHT;
-    	end
-  	end
-
-	SaturationCounter saturation_counter(
+	HysteresisCounter hysteresis_counter(
 		.branch_taken(update_taken),		// input
 		.current_state(PHT[update_index]),	// input
 		.next_state(next_PHT)				// output
