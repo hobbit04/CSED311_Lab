@@ -20,6 +20,7 @@ module BranchPredictor_Gshare(
 	// 	    1. fix current_pc
 	//      2. give ~32'b0 for update_pc (so that no updates happen)
 	// So we don't need additional stalling here
+	// Similarly, because of number 2 above, flushed operations don't update the predictor
 	
 	integer i;
 	wire tag_match;
