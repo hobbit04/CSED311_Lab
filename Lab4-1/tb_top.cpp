@@ -28,8 +28,8 @@ void next_cycle(Vtop* dut, VerilatedVcdC* m_trace) {
 
 int main(int argc, char** argv, char** env) {
     // TO DO : CHANGE "filename" TO PROVIDED "answer_*.txt" PATH
-    // string filename = "/home/daniel/CSED311_Lab/Lab4-1/student_tb/answer_basic_without_data_forwarding.txt";
-    string filename = "/home/daniel/CSED311_Lab/Lab4-1/student_tb/answer_non-controlflow.txt";
+    string filename = "/home/daniel/CSED311_Lab/Lab4-1/student_tb/answer_basic_without_data_forwarding.txt";
+    // string filename = "/home/daniel/CSED311_Lab/Lab4-1/student_tb/answer_non-controlflow.txt";
     ifstream file(filename);
     stringstream ss;
     string reg_hex;

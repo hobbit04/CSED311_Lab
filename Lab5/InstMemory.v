@@ -22,7 +22,7 @@ module InstMemory #(parameter MEM_DEPTH = 16384) (input reset,
         /* verilator lint_on BLKSEQ */
         // DO NOT TOUCH COMMENT ABOVE
       // Provide path of the file including instructions with binary format
-      $readmemh("/path/to/binary_format/file", mem);
+      $readmemh("./student_tb_Lab4/recursive_mem.txt", mem);
     end
   end
 

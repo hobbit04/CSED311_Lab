@@ -153,8 +153,14 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*0:0*/ top__DOT__cpu__DOT__alu__DOT__alu_bcond;
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__reset;
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__clk;
+        CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__is_input_valid;
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__mem_read;
         CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__mem_write;
+        CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__is_output_valid;
+        CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__mem_ready;
+        CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT___mem_read;
+        CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT___mem_write;
+        CData/*0:0*/ top__DOT__cpu__DOT__dmem__DOT__request_arrived;
         CData/*0:0*/ __VstlFirstIteration;
         CData/*0:0*/ __VicoFirstIteration;
         CData/*0:0*/ __Vtrigprevexpr___TOP__clk__0;
@@ -206,18 +212,20 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         IData/*31:0*/ top__DOT__cpu__DOT__reg_file__DOT__rs1_dout;
         IData/*31:0*/ top__DOT__cpu__DOT__reg_file__DOT__rs2_dout;
         IData/*31:0*/ top__DOT__cpu__DOT__reg_file__DOT__i;
+    };
+    struct {
         IData/*31:0*/ top__DOT__cpu__DOT__imm_gen__DOT__instruction;
         IData/*31:0*/ top__DOT__cpu__DOT__imm_gen__DOT__imm_gen_out;
         IData/*31:0*/ top__DOT__cpu__DOT__alu__DOT__alu_in_1;
         IData/*31:0*/ top__DOT__cpu__DOT__alu__DOT__alu_in_2;
         IData/*31:0*/ top__DOT__cpu__DOT__alu__DOT__alu_result;
         IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__addr;
-    };
-    struct {
-        IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__din;
-        IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__dout;
+        VlWide<4>/*127:0*/ top__DOT__cpu__DOT__dmem__DOT__din;
+        VlWide<4>/*127:0*/ top__DOT__cpu__DOT__dmem__DOT__dout;
         IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__i;
-        IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__dmem_addr;
+        IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__delay_counter;
+        IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT___mem_addr;
+        VlWide<4>/*127:0*/ top__DOT__cpu__DOT__dmem__DOT___din;
         IData/*31:0*/ __VactIterCount;
         VL_OUT(print_reg[32],31,0);
         VlUnpacked<IData/*31:0*/, 32> top__DOT__print_reg;
@@ -226,10 +234,10 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         VlUnpacked<IData/*26:0*/, 32> top__DOT__cpu__DOT__branch_predictor__DOT__tag;
         VlUnpacked<CData/*0:0*/, 32> top__DOT__cpu__DOT__branch_predictor__DOT__valid;
         VlUnpacked<CData/*1:0*/, 32> top__DOT__cpu__DOT__branch_predictor__DOT__PHT;
-        VlUnpacked<IData/*31:0*/, 1024> top__DOT__cpu__DOT__imem__DOT__mem;
+        VlUnpacked<IData/*31:0*/, 16384> top__DOT__cpu__DOT__imem__DOT__mem;
         VlUnpacked<IData/*31:0*/, 32> top__DOT__cpu__DOT__reg_file__DOT__print_reg;
         VlUnpacked<IData/*31:0*/, 32> top__DOT__cpu__DOT__reg_file__DOT__rf;
-        VlUnpacked<IData/*31:0*/, 16384> top__DOT__cpu__DOT__dmem__DOT__mem;
+        VlUnpacked<VlWide<4>/*127:0*/, 16384> top__DOT__cpu__DOT__dmem__DOT__mem;
     };
     VlTriggerVec<1> __VstlTriggered;
     VlTriggerVec<1> __VicoTriggered;
@@ -240,8 +248,10 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
     Vtop__Syms* const vlSymsp;
 
     // PARAMETERS
-    static constexpr IData/*31:0*/ top__DOT__cpu__DOT__imem__DOT__MEM_DEPTH = 0x00000400U;
+    static constexpr IData/*31:0*/ top__DOT__cpu__DOT__imem__DOT__MEM_DEPTH = 0x00004000U;
     static constexpr IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__MEM_DEPTH = 0x00004000U;
+    static constexpr IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__DELAY = 0x00000032U;
+    static constexpr IData/*31:0*/ top__DOT__cpu__DOT__dmem__DOT__BLOCK_SIZE = 0x00000010U;
 
     // CONSTRUCTORS
     Vtop___024root(Vtop__Syms* symsp, const char* v__name);

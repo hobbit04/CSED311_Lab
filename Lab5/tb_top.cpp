@@ -32,7 +32,7 @@ int main(int argc, char** argv, char** env) {
     // string filename = "./student_tb/answer_ifelse.txt";
     // string filename = "./student_tb/answer_loop.txt";
     // string filename = "./student_tb/answer_non-controlflow.txt";
-    string filename = "./student_tb/answer_recursive.txt";
+    string filename = "./student_tb_Lab4/answer_recursive.txt";
     ifstream file(filename);
     stringstream ss;
     string reg_hex;
