@@ -1,0 +1,40 @@
+Direct-mapped cache를 따로 구현하기 보다 a-way set associative cache를 구현한 후 a=1일 때를 
+Direct-mapped cache로 생각하자.
+
+Blocking cache를 구현하므로 miss가 발생했을 때 해결될 때까지 stall 시킨다
+
+lru 정책을 사용하기 위해 각 블록에 lru_counter 비트를 할당
+lru_counter는 같은 set에서 evict될 block을 고르는 것이므로 num of way 만큼까지 커질 수 있으면 됨
+
+Cache size C : 4096 bytes(4KB)
+associative a : 1 (for Direct), 4
+
+tag bits : 20, 22
+set index bits : 8 (2^8 = 256 = C / (1(a) * 16)), 6 (2^6 = 64 = C / (4(a) * 16))
+sum = 32 - 4 = 28
+
+FSM으로 state을 관리해야 한다.
+state의 종류 : idle, compare_tag, write_back, allocate(여기까진 교재 fig 5.38에 있는 states), select_victim
+
+idle:
+- cpu에서 캐시에 대한 요청이 들어오면 compare_tag로 넘어감
+- 관련 컨트롤 값 0으로 초기화
+
+compare_tag:
+- index에 해당하는 tag_bank의 원소와 tag를 비교
+- hit -> 해당 set에 대한 lru_counter = 0, next_state = idle, write/read hit 처리
+- miss -> next_state = select_victim
+
+select_victim:
+- index에 해당하는 set의 n-way들 중 valid = 0인 way 발견 -> 그 way를 victim으로 선택
+- 모두 valid한 경우 lru_counter가 가장 큰 way를 victim으로 선택
+- victim의 dirty bit 확인 -> 1이면 next_state = write_back, 
+                           0이면 next_state = allocate
+
+write_back:
+- 현재 캐시의 저장된 값이 메모리의 값보다 최신 값인 상황
+- is_write인 경우에만 실행( write miss 처리)
+- data_memory[addr]의 값을 data_bank[index][victim's way]의 값으로 업데이트
+
+allocate:
+data_bank[index][victim's way] = din
