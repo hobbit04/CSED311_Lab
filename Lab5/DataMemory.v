@@ -16,6 +16,21 @@ module DataMemory #(parameter MEM_DEPTH = 16384,
     output [BLOCK_SIZE * 8 - 1:0] dout,    // output data
     output mem_ready);
 
+    /*
+    Comments for my own understanding 
+
+    - kept registers: _mem_(sth), delay_counter
+    - delay_counter
+      initialize: when request_arrived and "processed previous" (== delay counter 0)
+      default: -= 1 always
+      keep to 0 whenever reached 0
+    - if request_arrived and "processed previous" (== delay_counter 0), then reset registers to the request parameters
+
+    - _mem_(sth) updates only when it is a valid request, so process it by all means
+    - Read: when counter reaches 0 and _mem_read, simply read from mem[_mem_addr] (async)
+    - Write: when counter reaches 0 and _mem_write, write _din to mem[_mem_addr] (sync)
+  */
+
   integer i;
 
   // Memory
