@@ -1,3 +1,4 @@
+`include "CLOG2.v"
 module Cache #(parameter LINE_SIZE = 16,
                parameter NUM_SETS = 256 /* 256 for direct-mapped, 64 for 4-way ~ */
                parameter NUM_WAYS = 1 /* 1 for direct-mapped, 4 for 4-way ~ */) (

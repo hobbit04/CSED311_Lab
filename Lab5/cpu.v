@@ -60,6 +60,7 @@ module cpu(input reset,       // positive reset signal
   wire [31:0] actual_addr;
   wire [31:0] update_pc;
   wire prediction_wrong;
+  wire is_input_valid;
 
   /***** MEM Stage wires *****/
   wire [31:0] mem_data;
@@ -118,6 +119,7 @@ module cpu(input reset,       // positive reset signal
   reg [31:0] EX_MEM_dmem_data;
   reg [4:0] EX_MEM_rd;
   reg [31:0] EX_MEM_pc_plus_4;
+  reg EX_MEM_is_input_valid; // For cache
 
   /***** MEM/WB pipeline registers *****/
   // From the control unit
@@ -322,7 +324,11 @@ module cpu(input reset,       // positive reset signal
 
 
 
-  /******* EX STAGE *******/ 
+  /******* EX STAGE *******/
+  // Before EX, "pc = ~32'b0" acted like "This instruction is NOP". (caused by stall, flush, ...)
+  // So, we use the LSB of pc to further push this information down the pipeline (1 means valid, 0 means invalid)
+  assign is_input_valid = ~ID_EX_pc[0];
+
   assign alu_forward_data_1 = forward_rs1[1] ? EX_MEM_alu_out :
                           forward_rs1[0] ? writeback_data :
                                            ID_EX_rs1_data;
@@ -379,6 +385,7 @@ module cpu(input reset,       // positive reset signal
       EX_MEM_dmem_data <= 32'b0;
       EX_MEM_rd <= 5'b0;
       EX_MEM_pc_plus_4 <= 32'b0;
+      EX_MEM_is_input_valid <= 1'b0;
     end
     else begin
       // Control values
@@ -393,6 +400,7 @@ module cpu(input reset,       // positive reset signal
       EX_MEM_dmem_data <= alu_forward_data_2;
       EX_MEM_rd <= ID_EX_rd;
       EX_MEM_pc_plus_4 <= ID_EX_pc + 4; 
+      EX_MEM_is_input_valid <= is_input_valid;
     end
   end
 
@@ -402,15 +410,21 @@ module cpu(input reset,       // positive reset signal
 
   /******* MEM STAGE *******/
 
-  // ---------- Data Memory ----------
-  DataMemory dmem(
-    .reset(reset),                  // input
-    .clk(clk),                      // input
-    .addr(EX_MEM_alu_out),          // input
-    .din(EX_MEM_dmem_data),         // input
-    .mem_read(EX_MEM_mem_read),     // input
-    .mem_write(EX_MEM_mem_write),   // input
-    .dout(mem_data)                 // output
+  // ---------- Cache & Data Memory ----------
+  // (Data Memory module is inside of Cache module)
+  Cache cache(
+    .reset(reset),                            // input
+    .clk(clk),                                // input
+    .addr(EX_MEM_alu_out),                    // input
+    .mem_read(EX_MEM_mem_read),               // input
+    .mem_write(EX_MEM_mem_write),             // input
+    .din(EX_MEM_dmem_data),                   // input
+    .dout(mem_data)                           // output
+
+    .is_input_valid(EX_MEM_is_input_valid),   // input (control for cache)    
+    .is_ready(),                    // output (control for cache)
+    .is_output_valid(),             // output (control for cache)
+    .is_hit(),                      // output (control for cache)
   );
 
   // Update MEM/WB pipeline registers here
