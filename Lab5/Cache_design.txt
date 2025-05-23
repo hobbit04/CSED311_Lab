@@ -6,23 +6,38 @@ Blocking cache를 구현하므로 miss가 발생했을 때 해결될 때까지 s
 lru 정책을 사용하기 위해 각 블록에 lru_counter 비트를 할당
 lru_counter는 같은 set에서 evict될 block을 고르는 것이므로 num of way 만큼까지 커질 수 있으면 됨
 
-Cache size C : 4096 bytes(4KB)
+Cache size C : 256 bytes(2^8)
 associative a : 1 (for Direct), 4
 
-tag bits : 20, 22
-set index bits : 8 (2^8 = 256 = C / (1(a) * 16)), 6 (2^6 = 64 = C / (4(a) * 16))
+tag bits : 24, 26
+set index bits : 4 (2^4 = 16 = C / (1(a) * 16)), 2 (2^2 = 4 = C / (4(a) * 16))
 sum = 32 - 4 = 28
+
+input is_input_valid,
+input [31:0] addr,
+input mem_read,
+input mem_write,
+input [31:0] din,
+
+output is_ready,
+output is_output_valid,
+output [31:0] dout,
+output is_hit
 
 FSM으로 state을 관리해야 한다.
 state의 종류 : idle, compare_tag, write_back, allocate(여기까진 교재 fig 5.38에 있는 states), select_victim
 
 idle:
 - cpu에서 캐시에 대한 요청이 들어오면 compare_tag로 넘어감
-- 관련 컨트롤 값 0으로 초기화
+- if is_input_valid = 1 -> next_state = compare_tag
+- is_ready = 1
 
 compare_tag:
 - index에 해당하는 tag_bank의 원소와 tag를 비교
-- hit -> 해당 set에 대한 lru_counter = 0, next_state = idle, write/read hit 처리
+- is_hit -> 해당 set에 대한 lru_counter = 0, next_state = idle, write/read hit 처리
+- if mem_write : Write-back policy 구현. data_bank의 값 din으로 업데이트
+- if mem_read : dout에 data_bank 값 대입
+- if is_hit : next_state = idle, lru_counter update
 - miss -> next_state = select_victim
 
 select_victim:
