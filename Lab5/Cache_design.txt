@@ -5,6 +5,7 @@ Blocking cache를 구현하므로 miss가 발생했을 때 해결될 때까지 s
 
 lru 정책을 사용하기 위해 각 블록에 lru_counter 비트를 할당
 lru_counter는 같은 set에서 evict될 block을 고르는 것이므로 num of way 만큼까지 커질 수 있으면 됨
+오버플로우가 일어나지 않도록 제한해야 함
 
 Cache size C : 256 bytes(2^8)
 associative a : 1 (for Direct), 4
@@ -37,7 +38,6 @@ compare_tag:
 - is_hit -> 해당 set에 대한 lru_counter = 0, next_state = idle, write/read hit 처리
 - if mem_write : Write-back policy 구현. data_bank의 값 din으로 업데이트
 - if mem_read : dout에 data_bank 값 대입
-- if is_hit : next_state = idle, lru_counter update
 - miss -> next_state = select_victim
 
 select_victim:
