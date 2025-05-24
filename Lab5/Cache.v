@@ -41,12 +41,13 @@ module Cache #(parameter LINE_SIZE = 16,
   reg valid_bit [NUM_SETS-1:0][NUM_WAYS-1:0];
   reg dirty_bit [NUM_SETS-1:0][NUM_WAYS-1:0];
 
-  // Registers for capturing the request
-  reg req_read, req_write;
-  reg [OFFSET_BITS-1:0] req_offset;
-  reg [INDEX_BITS-1:0]  req_index;
-  reg [TAG_BITS-1:0]    req_tag;
-  reg [31:0]  req_din;
+  // // Registers for capturing the request
+  // reg req_read, req_write;
+  // reg [OFFSET_BITS-1:0] req_offset;
+  // reg [INDEX_BITS-1:0]  req_index;
+  // reg [TAG_BITS-1:0]    req_tag;
+  // reg [31:0]  req_din;
+
   // reg [`CLOG2(NUM_WAYS)-1:0] lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for a-way
   reg lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for direct-mapped
   
@@ -170,8 +171,20 @@ module Cache #(parameter LINE_SIZE = 16,
       end
     end
     else begin
-      // 캐시 컨트롤 값을 선언하고, 각 상태에 따라 컨트롤 값을 업데이트(DM input update와 같이) 
-      // -> 여기서 캐시 컨트롤 값을 기준으로 캐시 업데이트
+      case(state)
+        IDLE: begin
+          
+        end
+        COMPARE_TAG: begin
+          
+        end
+        WRITEBACK: begin
+          
+        end
+        ALLOCATE: begin
+          
+        end
+      endcase
     end
   end
 

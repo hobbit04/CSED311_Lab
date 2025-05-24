@@ -26,7 +26,7 @@ output [31:0] dout,
 output is_hit
 
 FSM으로 state을 관리해야 한다.
-state의 종류 : idle, compare_tag, write_back, allocate(여기까진 교재 fig 5.38에 있는 states), select_victim
+state의 종류 : idle, compare_tag, write_back(cache->mem), allocate(mem->cache)
 
 idle:
 - cpu에서 캐시에 대한 요청이 들어오면 compare_tag로 넘어감
@@ -38,13 +38,8 @@ compare_tag:
 - is_hit -> 해당 set에 대한 lru_counter = 0, next_state = idle, write/read hit 처리
 - if mem_write : Write-back policy 구현. data_bank의 값 din으로 업데이트
 - if mem_read : dout에 data_bank 값 대입
-- miss -> next_state = select_victim
-
-select_victim:
-- index에 해당하는 set의 n-way들 중 valid = 0인 way 발견 -> 그 way를 victim으로 선택
-- 모두 valid한 경우 lru_counter가 가장 큰 way를 victim으로 선택
-- victim의 dirty bit 확인 -> 1이면 next_state = write_back, 
-                           0이면 next_state = allocate
+- miss & dirty -> next_state = write_back
+- miss & !dirty -> next_state = allocate
 
 write_back:
 - 현재 캐시의 저장된 값이 메모리의 값보다 최신 값인 상황
@@ -52,4 +47,5 @@ write_back:
 - data_memory[addr]의 값을 data_bank[index][victim's way]의 값으로 업데이트
 
 allocate:
-data_bank[index][victim's way] = din
+- data_bank[index][victim's way] = din
+
