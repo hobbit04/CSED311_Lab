@@ -28,11 +28,14 @@ void next_cycle(Vtop* dut, VerilatedVcdC* m_trace) {
 
 int main(int argc, char** argv, char** env) {
     // TO DO : CHANGE "filename" TO PROVIDED "answer_*.txt" PATH
-    // string filename = "./student_tb/answer_basic.txt";
-    // string filename = "./student_tb/answer_ifelse.txt";
-    // string filename = "./student_tb/answer_loop.txt";
-    // string filename = "./student_tb/answer_non-controlflow.txt";
-    string filename = "./student_tb_Lab4/answer_recursive.txt";
+    string filename = "./student_tb_Lab4/answer_basic.txt";
+    // string filename = "./student_tb_Lab4/answer_ifelse.txt";
+    // string filename = "./student_tb_Lab4/answer_loop.txt";
+    // string filename = "./student_tb_Lab4/answer_non-controlflow.txt";
+
+    // string filename = "./student_tb_Lab5/naive_ripes_result.txt";
+    // string filename = "./student_tb_Lab5/opt_ripes_result.txt";
+
     ifstream file(filename);
     stringstream ss;
     string reg_hex;
