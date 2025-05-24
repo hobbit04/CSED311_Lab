@@ -26,7 +26,7 @@ module Cache #(parameter LINE_SIZE = 16,
              WRITEBACK     = 2,
              ALLOCATE      = 3;
 
-  localparam MAX_LRU_COUNT = (NUM_WAYS == 1) ? 1 : NUM_WAYS - 1;  
+  // localparam MAX_LRU_COUNT = (NUM_WAYS == 1) ? 1 : NUM_WAYS - 1;  // for a-way cache
 
   // Wire declarations
   wire is_data_mem_ready, is_data_mem_output_valid;
@@ -95,19 +95,18 @@ module Cache #(parameter LINE_SIZE = 16,
     .mem_ready(is_data_mem_ready)
   );
 
-  // Find matching way
-  always @(*) begin
-    matching_way = 0;
-    for(i = 0; i < NUM_WAYS; i = i + 1) begin
-      if (tag_bank[index][i] == tag && valid_bit[index][i]) begin
-        matching_way = i;
-      end
-    end
-  end
+  // Find matching way for a-way
+  // always @(*) begin
+  //   matching_way = 0;
+  //   for(i = 0; i < NUM_WAYS; i = i + 1) begin
+  //     if (tag_bank[index][i] == tag && valid_bit[index][i]) begin
+  //       matching_way = i;
+  //     end
+  //   end
+  // end
 
   // State transition control
   always @(*) begin
-    next_state = state;
     case (state)
       IDLE: begin
         if(is_input_valid) begin
@@ -179,8 +178,6 @@ module Cache #(parameter LINE_SIZE = 16,
           lru_counter[i][j] <= 0;
         end
       end
-      state <= IDLE;
-      next_state <= state;
     end
     else begin
       case(state)
@@ -190,16 +187,16 @@ module Cache #(parameter LINE_SIZE = 16,
         COMPARE_TAG: begin
           // todo: if is_hit, pass the data to the output
           if(is_hit) begin
-            dout <= data_bank[index][matching_way][offset[3:2]*32 +: 32];
-            // todo: update lru_counter
-            for(i = 0; i < NUM_WAYS; i = i + 1) begin
-              if(i == matching_way) begin
-                lru_counter[index][i] <= 0;
-              end
-              else begin
-                lru_counter[index][i] <= lru_counter[index][i] < MAX_LRU_COUNT ? lru_counter[index][i] + 1 : MAX_LRU_COUNT;
-              end
-            end
+
+            // // todo: update lru_counter for a-way
+            // for(i = 0; i < NUM_WAYS; i = i + 1) begin
+            //   if(i == matching_way) begin
+            //     lru_counter[index][i] <= 0;
+            //   end
+            //   else begin
+            //     lru_counter[index][i] <= lru_counter[index][i] < MAX_LRU_COUNT ? lru_counter[index][i] + 1 : MAX_LRU_COUNT;
+            //   end
+            // end
             // if you modify cache, set dirty_bit = 1
             if(mem_write) begin
               dirty_bit[index][matching_way] <= 1;  // if miss-write, set dirty bit
@@ -225,7 +222,7 @@ module Cache #(parameter LINE_SIZE = 16,
           //   end
           // end
 
-          data_bank[index][victim][offset[3:2]*32 +: 32] <= data_mem_dout;
+          data_bank[index][victim] <= data_mem_dout;
           tag_bank[index][victim] <= tag;
           valid_bit[index][victim] <= 1;
           dirty_bit[index][victim] <= 0;
