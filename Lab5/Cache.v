@@ -26,6 +26,8 @@ module Cache #(parameter LINE_SIZE = 16,
              WRITEBACK     = 2,
              ALLOCATE      = 3;
 
+  localparam MAX_LRU_COUNT = NUM_WAYS == 1 ? 1 : NUM_WAYS - 1;  
+
   // Wire declarations
   wire is_data_mem_ready, is_data_mem_output_valid, data_mem_dout;
   wire [OFFSET_BITS-1:0] offset = addr[OFFSET_BITS-1:0];
@@ -63,7 +65,7 @@ module Cache #(parameter LINE_SIZE = 16,
   
   integer i, j;
 
-  assign is_ready = is_data_mem_ready || (next_state == IDLE);  // 데이터 메모리가 준비되거나 다음 상태가 idle이면 캐시가 준비된 상태
+  assign is_ready = (next_state == IDLE);  // 데이터 메모리가 준비되거나 다음 상태가 idle이면 캐시가 준비된 상태
   // 헷갈리는 점: 주어진 코드에 is_data_mem_ready만 있었는데, 그것만으로 어떻게 캐시가 준비된 상태인지 알 수 있지? 
   //            -> 사실 next_state가 IDLE이기만 하면 되는 것 같은데.. 왜 저렇게 줬을까
   assign is_output_valid = (state == COMPARE_TAG);
@@ -94,6 +96,7 @@ module Cache #(parameter LINE_SIZE = 16,
     for(i = 0; i < NUM_WAYS; i = i + 1) begin
       if (tag_bank[index][i] == tag && valid_bit[index][i]) begin
         matching_way = i;
+        is_hit = 1;
       end
     end
   end
@@ -133,7 +136,7 @@ module Cache #(parameter LINE_SIZE = 16,
     endcase
   end
 
-  // Calculate DataMemory's inputs 그리고 캐시 컨트롤 값도(뭐뭐 필요할지 생각해봐야..)
+  // Calculate DataMemory's inputs 
   always @(*) begin
     data_mem_is_input_valid = 0;
     data_mem_addr = addr;
@@ -149,9 +152,11 @@ module Cache #(parameter LINE_SIZE = 16,
       end
       WRITEBACK: begin
         data_mem_write = 1;
+        data_mem_is_input_valid = 1;
         data_mem_din = data_bank[index][matching_way]; 
       end
       ALLOCATE: begin
+        data_mem_is_input_valid = 1;
         data_mem_read = 1;
       end
     endcase
@@ -162,30 +167,48 @@ module Cache #(parameter LINE_SIZE = 16,
     if(reset) begin
       for(i = 0; i < NUM_SETS; i = i + 1) begin
         for(j = 0; j < NUM_WAYS; j = j + 1)begin
-          tag_bank[i][j] = 0;
-          data_bank[i][j] = 0;
-          valid_bit[i][j] = 0;
-          dirty_bit[i][j] = 0;
-          lru_counter[i][j] = 0;
+          tag_bank[i][j] <= 0;
+          data_bank[i][j] <= 0;
+          valid_bit[i][j] <= 0;
+          dirty_bit[i][j] <= 0;
+          lru_counter[i][j] <= 0;
         end
       end
+      state <= IDLE;
     end
     else begin
       case(state)
         IDLE: begin
-          
+          // no need to do anything about cache
         end
         COMPARE_TAG: begin
-          
+          // todo: if is_hit, pass the data to the output
+          if(is_hit) begin
+            dout <= data_bank[index][matching_way][offset[3:2]*32 +: 32];
+            // todo: update lru_counter
+            for(i = 0; i < NUM_WAYS; i = i + 1) begin
+              if(i == matching_way) begin
+                lru_counter[index][i] <= 0;
+              end
+              else begin
+                lru_counter[index][i] <= lru_counter[index][i] < MAX_LRU_COUNT ? lru_counter[index][i] + 1 : MAX_LRU_COUNT;
+              end
+            end
+          end          
         end
         WRITEBACK: begin
-          
+          // 뭘 할 필요가 없는 것 같음
         end
         ALLOCATE: begin
-          
+          data_bank[index][matching_way][offset[3:2]*32 +: 32] <= data_mem_dout;
+          tag_bank[index][matching_way] <= tag;
+          valid_bit[index][matching_way] <= 1;
+          dirty_bit[index][matching_way] <= 0;
+          lru_counter[index][matching_way] <= 0;
         end
       endcase
     end
+    state <= next_state;
   end
 
 
