@@ -68,6 +68,7 @@ module cpu(input reset,       // positive reset signal
   wire is_ready;
   wire is_output_valid;
   wire is_hit;
+  wire stall_by_cache;
   reg [31:0] hit_counter;
 
   /***** WB Stage wires *****/
@@ -195,7 +196,7 @@ module cpu(input reset,       // positive reset signal
   PC pc(
     .reset(reset),                    // input (Use reset to initialize PC. Initial value must be 0)
     .clk(clk),                        // input
-    .enable(!is_stall && is_ready),   // input
+    .enable(!is_stall && !stall_by_cache),   // input
     .next_pc(next_pc),                // input
     .current_pc(current_pc)           // output
   );
@@ -216,7 +217,7 @@ module cpu(input reset,       // positive reset signal
       IF_ID_predicted_next_pc <= ~32'b0;
       IF_ID_predicted_branch_taken <= 1'b0;
     end
-    else if (!is_stall && is_ready) begin
+    else if (!is_stall && !stall_by_cache) begin
       IF_ID_inst <= instruction;
       IF_ID_pc <= current_pc;
       IF_ID_predicted_next_pc <= predicted_next_pc;
@@ -273,7 +274,7 @@ module cpu(input reset,       // positive reset signal
 
   // Update ID/EX pipeline registers here
   always @(posedge clk) begin
-    if (reset || prediction_wrong || is_stall) begin
+    if (reset || ((prediction_wrong || is_stall) && !stall_by_cache)) begin
       // Control values
       ID_EX_alu_src <= 1'b0;
       ID_EX_alu_op <= 2'b00;
@@ -298,7 +299,7 @@ module cpu(input reset,       // positive reset signal
       ID_EX_predicted_next_pc <= ~32'b0;
       ID_EX_predicted_branch_taken <= 1'b0;
     end
-    else if (is_ready) begin
+    else if (!stall_by_cache) begin
       // Control values
       ID_EX_alu_src <= alu_src;
       ID_EX_alu_op <= alu_op;
@@ -332,7 +333,8 @@ module cpu(input reset,       // positive reset signal
   /******* EX STAGE *******/
   // Before EX, "pc = ~32'b0" acted like "This instruction is NOP". (caused by stall, flush, ...)
   // So, we use the LSB of pc to further push this information down the pipeline (1 means valid, 0 means invalid)
-  assign is_input_valid = ~ID_EX_pc[0];
+  assign is_input_valid = (!(ID_EX_pc[0]) &&
+                          (ID_EX_mem_read || ID_EX_mem_write));
 
   assign alu_forward_data_1 = forward_rs1[1] ? EX_MEM_alu_out :
                           forward_rs1[0] ? writeback_data :
@@ -392,7 +394,7 @@ module cpu(input reset,       // positive reset signal
       EX_MEM_pc_plus_4 <= 32'b0;
       EX_MEM_is_input_valid <= 1'b0;
     end
-    else if (is_ready) begin
+    else if (!stall_by_cache) begin
       // Control values
       EX_MEM_mem_write <= ID_EX_mem_write;
       EX_MEM_mem_read <= ID_EX_mem_read;
@@ -431,6 +433,8 @@ module cpu(input reset,       // positive reset signal
     .is_output_valid(is_output_valid),        // output (control for cache)
     .is_hit(is_hit)                           // output (control for cache)
   );
+  assign stall_by_cache = (EX_MEM_mem_read || EX_MEM_mem_write) && (!is_output_valid);
+
 
   // ---------- Hit counter ----------
   // hit_counter is a 32 bit register
@@ -445,7 +449,7 @@ module cpu(input reset,       // positive reset signal
 
   // Update MEM/WB pipeline registers here
   always @(posedge clk) begin
-    if (reset || !is_output_valid) begin
+    if (reset) begin
       MEM_WB_mem_to_reg <= 1'b0;
       MEM_WB_reg_write <= 1'b0;
       MEM_WB_is_halted <= 1'b0;
@@ -456,7 +460,7 @@ module cpu(input reset,       // positive reset signal
       MEM_WB_mem_to_reg_src_2 <= 32'b0;
       MEM_WB_pc_plus_4 <= 32'b0;
     end
-    else begin
+    else if (!stall_by_cache) begin
       // Control values
       MEM_WB_mem_to_reg <= EX_MEM_mem_to_reg;
       MEM_WB_reg_write <= EX_MEM_reg_write;
