@@ -65,6 +65,11 @@ module cpu(input reset,       // positive reset signal
   /***** MEM Stage wires *****/
   wire [31:0] mem_data;
 
+  wire is_ready;
+  wire is_output_valid;
+  wire is_hit;
+  reg [31:0] hit_counter;
+
   /***** WB Stage wires *****/
   wire [31:0] writeback_data;
 
@@ -188,11 +193,11 @@ module cpu(input reset,       // positive reset signal
   // ---------- Update program counter ----------
   // PC must be updated on the rising edge (positive edge) of the clock.
   PC pc(
-    .reset(reset),            // input (Use reset to initialize PC. Initial value must be 0)
-    .clk(clk),                // input
-    .is_stall(is_stall),      // input
-    .next_pc(next_pc),        // input
-    .current_pc(current_pc)   // output
+    .reset(reset),                    // input (Use reset to initialize PC. Initial value must be 0)
+    .clk(clk),                        // input
+    .enable(!is_stall && is_ready),   // input
+    .next_pc(next_pc),                // input
+    .current_pc(current_pc)           // output
   );
   
   // ---------- Instruction Memory ----------
@@ -211,7 +216,7 @@ module cpu(input reset,       // positive reset signal
       IF_ID_predicted_next_pc <= ~32'b0;
       IF_ID_predicted_branch_taken <= 1'b0;
     end
-    else if (!is_stall) begin
+    else if (!is_stall && is_ready) begin
       IF_ID_inst <= instruction;
       IF_ID_pc <= current_pc;
       IF_ID_predicted_next_pc <= predicted_next_pc;
@@ -293,7 +298,7 @@ module cpu(input reset,       // positive reset signal
       ID_EX_predicted_next_pc <= ~32'b0;
       ID_EX_predicted_branch_taken <= 1'b0;
     end
-    else begin
+    else if (is_ready) begin
       // Control values
       ID_EX_alu_src <= alu_src;
       ID_EX_alu_op <= alu_op;
@@ -387,7 +392,7 @@ module cpu(input reset,       // positive reset signal
       EX_MEM_pc_plus_4 <= 32'b0;
       EX_MEM_is_input_valid <= 1'b0;
     end
-    else begin
+    else if (is_ready) begin
       // Control values
       EX_MEM_mem_write <= ID_EX_mem_write;
       EX_MEM_mem_read <= ID_EX_mem_read;
@@ -419,17 +424,28 @@ module cpu(input reset,       // positive reset signal
     .mem_read(EX_MEM_mem_read),               // input
     .mem_write(EX_MEM_mem_write),             // input
     .din(EX_MEM_dmem_data),                   // input
-    .dout(mem_data)                           // output
+    .dout(mem_data),                          // output
 
     .is_input_valid(EX_MEM_is_input_valid),   // input (control for cache)    
-    .is_ready(),                    // output (control for cache)
-    .is_output_valid(),             // output (control for cache)
-    .is_hit(),                      // output (control for cache)
+    .is_ready(is_ready),                      // output (control for cache)
+    .is_output_valid(is_output_valid),        // output (control for cache)
+    .is_hit(is_hit)                           // output (control for cache)
   );
+
+  // ---------- Hit counter ----------
+  // hit_counter is a 32 bit register
+  always @(posedge clk) begin
+    if (reset) begin
+      hit_counter <= 32'b0;
+    end
+    else begin
+      hit_counter <= hit_counter + {31'b0, is_hit};
+    end
+  end
 
   // Update MEM/WB pipeline registers here
   always @(posedge clk) begin
-    if (reset) begin
+    if (reset || !is_output_valid) begin
       MEM_WB_mem_to_reg <= 1'b0;
       MEM_WB_reg_write <= 1'b0;
       MEM_WB_is_halted <= 1'b0;
