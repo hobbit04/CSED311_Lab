@@ -1,6 +1,6 @@
 `include "CLOG2.v"
 module Cache #(parameter LINE_SIZE = 16,
-               parameter NUM_SETS = 16 /* 16 for direct-mapped, 4 for 4-way ~ */
+               parameter NUM_SETS = 16, /* 16 for direct-mapped, 4 for 4-way ~ */
                parameter NUM_WAYS = 1 /* 1 for direct-mapped, 4 for 4-way ~ */) (
     input reset,
     input clk,
@@ -26,10 +26,11 @@ module Cache #(parameter LINE_SIZE = 16,
              WRITEBACK     = 2,
              ALLOCATE      = 3;
 
-  localparam MAX_LRU_COUNT = NUM_WAYS == 1 ? 1 : NUM_WAYS - 1;  
+  localparam MAX_LRU_COUNT = (NUM_WAYS == 1) ? 1 : NUM_WAYS - 1;  
 
   // Wire declarations
-  wire is_data_mem_ready, is_data_mem_output_valid, data_mem_dout;
+  wire is_data_mem_ready, is_data_mem_output_valid;
+  wire [LINE_SIZE * 8 - 1:0] data_mem_dout;
   wire [OFFSET_BITS-1:0] offset = addr[OFFSET_BITS-1:0];
   wire [INDEX_BITS-1:0]  index  = addr[OFFSET_BITS +: INDEX_BITS];
   wire [TAG_BITS-1:0]    tag    = addr[31:OFFSET_BITS+INDEX_BITS];
@@ -54,7 +55,9 @@ module Cache #(parameter LINE_SIZE = 16,
   reg lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for direct-mapped
   
   // DataMemory의 입력으로 들어갈 레지스터들을 따로 선언
-  reg data_mem_is_input_valid, data_mem_addr, data_mem_read, data_mem_write, data_mem_din;  
+  reg data_mem_is_input_valid, data_mem_read, data_mem_write;
+  reg [31:0] data_mem_addr;
+  reg [LINE_SIZE * 8 - 1:0] data_mem_din;  
   
 
   reg matching_way;  // for direct-mapped
@@ -62,15 +65,17 @@ module Cache #(parameter LINE_SIZE = 16,
 
   reg victim;  // for direct-mapped
   // reg [`CLOG2(NUM_WAYS)-1:0] victim; // for a-way 
+  integer current_max_lru_cnt;
   
   integer i, j;
+  reg flag;  // for breaking the for-loop
 
   assign is_ready = (next_state == IDLE);  // 데이터 메모리가 준비되거나 다음 상태가 idle이면 캐시가 준비된 상태
   // 헷갈리는 점: 주어진 코드에 is_data_mem_ready만 있었는데, 그것만으로 어떻게 캐시가 준비된 상태인지 알 수 있지? 
   //            -> 사실 next_state가 IDLE이기만 하면 되는 것 같은데.. 왜 저렇게 줬을까
   assign is_output_valid = (state == COMPARE_TAG);
   assign dout = data_bank[index][matching_way][offset[3:2]*32 +: 32];  
-  // assign is_hit =  // 여기서 구해야 할 지 아니면 다른 과정(state == COMPARE_TAG)에서 구해야 할 지
+  assign is_hit = (valid_bit[index][matching_way] && tag_bank[index][matching_way] == tag);
 
   // Instantiate data memory
   DataMemory #(.BLOCK_SIZE(LINE_SIZE)) data_mem(
@@ -96,13 +101,13 @@ module Cache #(parameter LINE_SIZE = 16,
     for(i = 0; i < NUM_WAYS; i = i + 1) begin
       if (tag_bank[index][i] == tag && valid_bit[index][i]) begin
         matching_way = i;
-        is_hit = 1;
       end
     end
   end
 
   // State transition control
   always @(*) begin
+    next_state = state;
     case (state)
       IDLE: begin
         if(is_input_valid) begin
@@ -175,6 +180,7 @@ module Cache #(parameter LINE_SIZE = 16,
         end
       end
       state <= IDLE;
+      next_state <= state;
     end
     else begin
       case(state)
@@ -194,22 +200,39 @@ module Cache #(parameter LINE_SIZE = 16,
                 lru_counter[index][i] <= lru_counter[index][i] < MAX_LRU_COUNT ? lru_counter[index][i] + 1 : MAX_LRU_COUNT;
               end
             end
-          end          
+            // if you modify cache, set dirty_bit = 1
+            if(mem_write) begin
+              dirty_bit[index][matching_way] <= 1;  // if miss-write, set dirty bit
+            end
+          end         
         end
         WRITEBACK: begin
           // 뭘 할 필요가 없는 것 같음
         end
         ALLOCATE: begin
-          data_bank[index][matching_way][offset[3:2]*32 +: 32] <= data_mem_dout;
-          tag_bank[index][matching_way] <= tag;
-          valid_bit[index][matching_way] <= 1;
-          dirty_bit[index][matching_way] <= 0;
-          lru_counter[index][matching_way] <= 0;
+          // todo: find a victim way
+          victim <= 0;  // for direct-mapped, victim is always 0
+          // current_max_lru_cnt <= 0;  // for a-way, find maximum lru value block and set it as victim
+          // flag <= 0;
+          // for(i=0; i<NUM_WAYS; i=i+1) begin
+          //   if(!valid_bit[index][i]) begin
+          //     victim <= i;  // if there is an empty way, use it as victim
+          //     flag <= 1;
+          //   end
+          //   else if(!flag && lru_counter[index][i] > current_max_lru_cnt) begin
+          //     victim <= i;  // if all ways are valid, use the least recently used way as victim
+          //     current_max_lru_cnt <= lru_counter[index][i];
+          //   end
+          // end
+
+          data_bank[index][victim][offset[3:2]*32 +: 32] <= data_mem_dout;
+          tag_bank[index][victim] <= tag;
+          valid_bit[index][victim] <= 1;
+          dirty_bit[index][victim] <= 0;
+          lru_counter[index][victim] <= 0;
         end
       endcase
-    end
     state <= next_state;
+    end
   end
-
-
 endmodule
