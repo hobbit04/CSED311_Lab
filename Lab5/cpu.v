@@ -442,7 +442,7 @@ module cpu(input reset,       // positive reset signal
     if (reset) begin
       hit_counter <= 32'b0;
     end
-    else begin
+    else if (is_output_valid) begin
       hit_counter <= hit_counter + {31'b0, is_hit};
     end
   end

@@ -48,20 +48,19 @@ module DirMapCache #(parameter LINE_SIZE = 16,
   reg [LINE_SIZE * 8 - 1:0] data_mem_din;  
  
   integer i, j;
-  reg flag;  // for breaking the for-loop
 
   assign is_ready = (next_state == IDLE); 
-  assign is_output_valid = (state == COMPARE_TAG);
+  assign is_output_valid = (state == COMPARE_TAG && next_state == IDLE);
   assign dout = data_bank[index][offset[3:2]*32 +: 32];  
   assign is_hit = (valid_bit[index] && tag_bank[index] == tag);
 
-  // Instantiate data memory
+  // ---------- Data Memory ----------
   DataMemory #(.BLOCK_SIZE(LINE_SIZE)) data_mem(
     .reset(reset),
     .clk(clk),
 
     .is_input_valid(data_mem_is_input_valid),
-    .addr(data_mem_addr >> `CLOG2(LINE_SIZE)),        // NOTE: address must be shifted by CLOG2(LINE_SIZE)
+    .addr(data_mem_addr),        // NOTE: address must be shifted by CLOG2(LINE_SIZE)
     .mem_read(data_mem_read),
     .mem_write(data_mem_write),
     .din(data_mem_din),
@@ -73,7 +72,46 @@ module DirMapCache #(parameter LINE_SIZE = 16,
     .mem_ready(is_data_mem_ready)
   );
 
-  // State transition control
+  always @(*) begin
+    data_mem_is_input_valid = 0;
+    data_mem_addr = 0;
+    data_mem_read = 0;
+    data_mem_write = 0;
+    data_mem_din = 0;
+    case(state)
+      IDLE: begin
+      end
+      COMPARE_TAG: begin
+      end
+      WRITEBACK: begin
+        data_mem_is_input_valid = 1;
+        data_mem_write = 1;
+        data_mem_addr = {tag_bank[index], index, 4'b0000}; // write back the dirty block
+        data_mem_din = data_bank[index];
+      end
+      ALLOCATE: begin
+        data_mem_is_input_valid = 1;
+        data_mem_addr = addr;
+        data_mem_read = 1;
+      end
+    endcase
+  end
+
+
+
+
+
+
+  // ---------- State transition ----------
+  always @(posedge clk) begin
+    if (reset) begin
+      state <= IDLE;
+    end
+    else begin
+      state <= next_state;
+    end
+  end
+
   always @(*) begin
     case (state)
       IDLE: begin
@@ -96,10 +134,16 @@ module DirMapCache #(parameter LINE_SIZE = 16,
         if(is_data_mem_ready) begin
           next_state = ALLOCATE;
         end
+        else begin
+          next_state = WRITEBACK;
+        end
       end
       ALLOCATE: begin
         if(is_data_mem_ready) begin
-          next_state = IDLE;
+          next_state = COMPARE_TAG;
+        end
+        else begin
+          next_state = ALLOCATE;
         end
       end
       default: begin
@@ -108,35 +152,11 @@ module DirMapCache #(parameter LINE_SIZE = 16,
     endcase
   end
 
-  // Calculate DataMemory's inputs 
-  always @(*) begin
-    data_mem_is_input_valid = 0;
-    
-    data_mem_read = 0;
-    data_mem_write = 0;
-    data_mem_din = 0;
-    case(state)
-      IDLE: begin
-        
-      end
-      COMPARE_TAG: begin
-        
-      end
-      WRITEBACK: begin
-        data_mem_is_input_valid = 1;
-        data_mem_write = 1;
-        data_mem_addr = {tag_bank[index], index, 4'b0000}; // write back the dirty block
-        data_mem_din = data_bank[index];
-      end
-      ALLOCATE: begin
-        data_mem_is_input_valid = 1;
-        data_mem_addr = addr;
-        data_mem_read = 1;
-      end
-    endcase
-  end
 
-  // For updating data
+
+
+
+  // ---------- Update Cache ----------
   always @(posedge clk) begin
     if(reset) begin
       for(i = 0; i < NUM_SETS; i = i + 1) begin
@@ -149,28 +169,17 @@ module DirMapCache #(parameter LINE_SIZE = 16,
     else begin
       case(state)
         IDLE: begin
-          // no need to do anything about cache
         end
         COMPARE_TAG: begin
-          // todo: if is_hit, pass the data to the output
-          if(is_hit) begin
-            // if you modify cache, set dirty_bit = 1
-            if(mem_write) begin
-              data_bank[index][offset[3:2]*32 +: 32] <= din;  // write data to the cache
-              dirty_bit[index] <= 1;  // if miss-write, set dirty bit
-            end
+          if(is_hit && mem_write) begin
+            data_bank[index][ offset[3:2]*32 +: 32 ] <= din;
+            dirty_bit[index] <= 1;  // if miss-write, set dirty bit
           end         
         end
         WRITEBACK: begin
-          if(is_data_mem_ready) begin
-            tag_bank[index] <= 0;
-            valid_bit[index] <= 0;
-            dirty_bit[index] <= 0;
-            data_bank[index] <= 0;
-          end
         end
         ALLOCATE: begin
-          if(is_data_mem_ready) begin
+          if(next_state == COMPARE_TAG) begin
             data_bank[index] <= data_mem_dout;
             tag_bank[index] <= tag;
             valid_bit[index] <= 1;
@@ -178,7 +187,9 @@ module DirMapCache #(parameter LINE_SIZE = 16,
           end
         end
       endcase
-    state <= next_state;
+
     end
   end
+
+
 endmodule
