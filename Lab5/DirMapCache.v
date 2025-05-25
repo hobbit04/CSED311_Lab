@@ -42,15 +42,14 @@ module DirMapCache #(parameter LINE_SIZE = 16,
   reg valid_bit [NUM_SETS-1:0];
   reg dirty_bit [NUM_SETS-1:0];
 
-  // DataMemory의 입력으로 들어갈 레지스터들을 따로 선언
   reg data_mem_is_input_valid, data_mem_read, data_mem_write;
   reg [31:0] data_mem_addr;
-  reg [LINE_SIZE * 8 - 1:0] data_mem_din;  
+  reg [LINE_SIZE * 8 - 1:0] data_mem_din;
  
   integer i, j;
 
-  assign is_ready = (next_state == IDLE); 
-  assign is_output_valid = (state == COMPARE_TAG && next_state == IDLE);
+  assign is_ready = (state == IDLE); 
+  assign is_output_valid = (state == COMPARE_TAG && is_hit);
   assign dout = data_bank[index][offset[3:2]*32 +: 32];  
   assign is_hit = (valid_bit[index] && tag_bank[index] == tag);
 
@@ -86,12 +85,12 @@ module DirMapCache #(parameter LINE_SIZE = 16,
       WRITEBACK: begin
         data_mem_is_input_valid = 1;
         data_mem_write = 1;
-        data_mem_addr = {tag_bank[index], index, 4'b0000}; // write back the dirty block
+        data_mem_addr = {tag_bank[index], index, 4'b0000} >> 4; // write back the dirty block
         data_mem_din = data_bank[index];
       end
       ALLOCATE: begin
         data_mem_is_input_valid = 1;
-        data_mem_addr = addr;
+        data_mem_addr = addr >> 4;
         data_mem_read = 1;
       end
     endcase
@@ -118,6 +117,9 @@ module DirMapCache #(parameter LINE_SIZE = 16,
         if(is_input_valid) begin
           next_state = COMPARE_TAG;
         end
+        else begin
+          next_state = IDLE;
+        end
       end
       COMPARE_TAG: begin
         if(is_hit) begin
@@ -139,7 +141,7 @@ module DirMapCache #(parameter LINE_SIZE = 16,
         end
       end
       ALLOCATE: begin
-        if(is_data_mem_ready) begin
+        if(is_data_mem_output_valid) begin  // 얘를 is_data_mem_ready로 바꾸면 8번은 맞고 13번은 틀림.. 현재는 8번이 틀리고 13번이 맞는 상태 -> 상태 전이와 타이밍 문제인 것 같음
           next_state = COMPARE_TAG;
         end
         else begin
@@ -187,9 +189,6 @@ module DirMapCache #(parameter LINE_SIZE = 16,
           end
         end
       endcase
-
     end
   end
-
-
 endmodule
