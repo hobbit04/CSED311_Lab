@@ -1,5 +1,5 @@
 `include "CLOG2.v"
-module Cache #(parameter LINE_SIZE = 16,
+module A_way_Cache #(parameter LINE_SIZE = 16,
                parameter NUM_SETS = 16, /* 16 for direct-mapped, 4 for 4-way ~ */
                parameter NUM_WAYS = 1 /* 1 for direct-mapped, 4 for 4-way ~ */) (
     input reset,
@@ -51,9 +51,9 @@ module Cache #(parameter LINE_SIZE = 16,
   // reg [TAG_BITS-1:0]    req_tag;
   // reg [31:0]  req_din;
 
-  // reg [`CLOG2(NUM_WAYS)-1:0] lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for a-way
   reg lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for direct-mapped
-  
+  // reg [`CLOG2(NUM_WAYS)-1:0] lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for a-way
+
   // DataMemory의 입력으로 들어갈 레지스터들을 따로 선언
   reg data_mem_is_input_valid, data_mem_read, data_mem_write;
   reg [31:0] data_mem_addr;
@@ -61,6 +61,7 @@ module Cache #(parameter LINE_SIZE = 16,
   
 
   reg matching_way;  // for direct-mapped
+  assign matching_way = 0;  // for direct-mapped, always use way 0
   // reg [`CLOG2(NUM_WAYS)-1:0] matching_way;  // for a-way
 
   reg victim;  // for direct-mapped
@@ -70,9 +71,7 @@ module Cache #(parameter LINE_SIZE = 16,
   integer i, j;
   reg flag;  // for breaking the for-loop
 
-  assign is_ready = (next_state == IDLE);  // 데이터 메모리가 준비되거나 다음 상태가 idle이면 캐시가 준비된 상태
-  // 헷갈리는 점: 주어진 코드에 is_data_mem_ready만 있었는데, 그것만으로 어떻게 캐시가 준비된 상태인지 알 수 있지? 
-  //            -> 사실 next_state가 IDLE이기만 하면 되는 것 같은데.. 왜 저렇게 줬을까
+  assign is_ready = (next_state == IDLE); 
   assign is_output_valid = (state == COMPARE_TAG);
   assign dout = data_bank[index][matching_way][offset[3:2]*32 +: 32];  
   assign is_hit = (valid_bit[index][matching_way] && tag_bank[index][matching_way] == tag);
@@ -143,7 +142,7 @@ module Cache #(parameter LINE_SIZE = 16,
   // Calculate DataMemory's inputs 
   always @(*) begin
     data_mem_is_input_valid = 0;
-    data_mem_addr = addr;
+    
     data_mem_read = 0;
     data_mem_write = 0;
     data_mem_din = 0;
@@ -155,12 +154,14 @@ module Cache #(parameter LINE_SIZE = 16,
         
       end
       WRITEBACK: begin
-        data_mem_write = 1;
         data_mem_is_input_valid = 1;
+        data_mem_write = 1;
+        data_mem_addr = {tag_bank[index][matching_way], index, 4'b0000}; // write back the dirty block
         data_mem_din = data_bank[index][matching_way]; 
       end
       ALLOCATE: begin
         data_mem_is_input_valid = 1;
+        data_mem_addr = addr;
         data_mem_read = 1;
       end
     endcase
@@ -199,12 +200,18 @@ module Cache #(parameter LINE_SIZE = 16,
             // end
             // if you modify cache, set dirty_bit = 1
             if(mem_write) begin
+              data_bank[index][matching_way][offset[3:2]*32 +: 32] <= din;  // write data to the cache
               dirty_bit[index][matching_way] <= 1;  // if miss-write, set dirty bit
             end
           end         
         end
         WRITEBACK: begin
-          // 뭘 할 필요가 없는 것 같음
+          if(is_data_mem_ready) begin
+            tag_bank[index][matching_way] <= 0;
+            valid_bit[index][matching_way] <= 0;
+            dirty_bit[index][matching_way] <= 0;
+            data_bank[index][matching_way] <= 0;
+          end
         end
         ALLOCATE: begin
           // todo: find a victim way
@@ -221,12 +228,13 @@ module Cache #(parameter LINE_SIZE = 16,
           //     current_max_lru_cnt <= lru_counter[index][i];
           //   end
           // end
-
-          data_bank[index][victim] <= data_mem_dout;
-          tag_bank[index][victim] <= tag;
-          valid_bit[index][victim] <= 1;
-          dirty_bit[index][victim] <= 0;
-          lru_counter[index][victim] <= 0;
+          if(is_data_mem_ready) begin
+            data_bank[index][victim] <= data_mem_dout;
+            tag_bank[index][victim] <= tag;
+            valid_bit[index][victim] <= 1;
+            dirty_bit[index][victim] <= 0;
+            lru_counter[index][victim] <= 0;
+          end
         end
       endcase
     state <= next_state;
