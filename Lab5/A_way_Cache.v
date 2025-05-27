@@ -56,7 +56,7 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
   integer i, j;
 
   assign is_ready = (next_state == IDLE); 
-  assign is_output_valid = (state == COMPARE_TAG);
+  assign is_output_valid = (state == COMPARE_TAG && is_hit);
   assign dout = data_bank[index][matching_way][offset[3:2]*32 +: 32];  
   assign is_hit = (valid_bit[index][matching_way] && tag_bank[index][matching_way] == tag);
 
@@ -66,7 +66,7 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
     .clk(clk),
 
     .is_input_valid(data_mem_is_input_valid),
-    .addr(data_mem_addr >> `CLOG2(LINE_SIZE)),        // NOTE: address must be shifted by CLOG2(LINE_SIZE)
+    .addr(data_mem_addr >> 4),        // NOTE: address must be shifted by CLOG2(LINE_SIZE)
     .mem_read(data_mem_read),
     .mem_write(data_mem_write),
     .din(data_mem_din),
@@ -77,7 +77,70 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
     // is data memory ready to accept request?
     .mem_ready(is_data_mem_ready)
   );
+ // Calculate DataMemory's inputs 
+  always @(*) begin
+    data_mem_is_input_valid = 0;
+    data_mem_addr = 0;
+    data_mem_read = 0;
+    data_mem_write = 0;
+    data_mem_din = 0;
 
+    lru_update = 0;
+    reg2cache = 0;
+    mem2cache = 0;
+
+    case(state)
+      IDLE: begin
+      end
+      COMPARE_TAG: begin
+        if(is_hit) begin
+          if(lru[index] == matching_way) begin
+            lru_update = 1;
+          end
+
+          if(mem_write) begin
+            reg2cache = 1;  // data mem -> cache
+          end
+        end
+        else begin
+          if(next_state == ALLOCATE) begin
+            data_mem_is_input_valid = 1;
+            data_mem_addr = addr;  // allocate the block
+            data_mem_read = 1;
+          end
+          else if(next_state == WRITEBACK) begin
+            data_mem_is_input_valid = 1;
+            data_mem_addr = {tag_bank[index][lru[index]], index, 4'b0000}; // write back the dirty block
+            data_mem_din = data_bank[index][lru[index]];
+            data_mem_write = 1;
+          end
+        end
+      end
+      WRITEBACK: begin
+        if(next_state == ALLOCATE) begin
+          data_mem_is_input_valid = 1;
+          data_mem_read = 1;
+          data_mem_addr = addr; // write back the dirty block
+        end
+      end
+      ALLOCATE: begin
+        if(next_state == COMPARE_TAG) begin
+          mem2cache = 1;  // data mem -> cache
+          // lru_update = 1;
+        end
+      end
+      default: begin
+        data_mem_is_input_valid = 0;
+        data_mem_addr = 0;
+        data_mem_read = 0;
+        data_mem_write = 0;
+        data_mem_din = 0;
+        lru_update = 0;
+        reg2cache = 0;
+        mem2cache = 0;
+      end
+    endcase
+  end
   // ---------- State transition ----------
   always @(posedge clk) begin
     if (reset) begin
@@ -130,70 +193,7 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
       end
     endcase
   end
-
-  // Calculate DataMemory's inputs 
-  always @(*) begin
-    data_mem_is_input_valid = 0;
-    data_mem_addr = 0;
-    data_mem_read = 0;
-    data_mem_write = 0;
-    data_mem_din = 0;
-
-    lru_update = 0;
-    reg2cache = 0;
-    mem2cache = 0;
-    case(state)
-      IDLE: begin
-      end
-      COMPARE_TAG: begin
-        if(is_hit) begin
-          if(lru[index] == matching_way) begin
-            lru_update = 1;
-          end
-
-          if(mem_write) begin
-            reg2cache = 1;  // data mem -> cache
-          end
-        end
-        else begin
-          if(next_state == ALLOCATE) begin
-            data_mem_is_input_valid = 1;
-            data_mem_addr = addr;  // allocate the block
-            data_mem_read = 1;
-          end
-          else if(next_state == WRITEBACK) begin
-            data_mem_is_input_valid = 1;
-            data_mem_addr = {tag_bank[index][lru[index]], index, 4'b0000}; // write back the dirty block
-            data_mem_din = data_bank[index][lru[index]];
-            data_mem_write = 1;
-          end
-        end
-      end
-      WRITEBACK: begin
-        if(next_state == ALLOCATE) begin
-          data_mem_is_input_valid = 1;
-          data_mem_read = 1;
-          data_mem_addr = addr; // write back the dirty block
-        end
-      end
-      ALLOCATE: begin
-        if(is_data_mem_output_valid) begin
-          mem2cache = 1;  // data mem -> cache
-          // lru_update = 1;
-        end
-      end
-      default: begin
-        data_mem_is_input_valid = 0;
-        data_mem_addr = 0;
-        data_mem_read = 0;
-        data_mem_write = 0;
-        data_mem_din = 0;
-        lru_update = 0;
-        reg2cache = 0;
-        mem2cache = 0;
-      end
-    endcase
-  end
+ 
 
   // ---------- Update Cache ----------
   always @(posedge clk) begin
@@ -222,6 +222,7 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
         valid_bit[index][lru[index]] <= 1;
         dirty_bit[index][lru[index]] <= 0;  
       end
+      
     end
   end
 endmodule

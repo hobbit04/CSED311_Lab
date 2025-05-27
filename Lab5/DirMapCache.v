@@ -1,6 +1,6 @@
 `include "CLOG2.v"
 module DirMapCache #(parameter LINE_SIZE = 16,
-               parameter NUM_SETS = 16 /* 16 for direct-mapped, 4 for 4-way ~ */
+               parameter NUM_SETS = 16 /* 16 for direct-mapped */
                ) (
     input reset,
     input clk,
@@ -46,7 +46,7 @@ module DirMapCache #(parameter LINE_SIZE = 16,
   reg [31:0] data_mem_addr;
   reg [LINE_SIZE * 8 - 1:0] data_mem_din;
 
-  reg reg2cache, mem2cache, clearCache;  // cache control signals
+  reg reg2cache, mem2cache;  // cache control signals
  
   integer i, j;
 
@@ -84,7 +84,6 @@ module DirMapCache #(parameter LINE_SIZE = 16,
     // Cache control signals
     reg2cache = 0;
     mem2cache = 0;
-    clearCache = 0;
 
     case(state)
       IDLE: begin
@@ -112,10 +111,6 @@ module DirMapCache #(parameter LINE_SIZE = 16,
           data_mem_is_input_valid = 1;
           data_mem_read = 1;
           data_mem_addr = addr; // write back the dirty block
-        end
-
-        if(is_data_mem_ready) begin
-          clearCache = 1;
         end
       end
       ALLOCATE: begin
@@ -212,12 +207,7 @@ module DirMapCache #(parameter LINE_SIZE = 16,
         valid_bit[index] <= 1;
         dirty_bit[index] <= 0;  
       end
-      if(clearCache) begin
-        data_bank[index] <= 0;
-        tag_bank[index] <= 0;
-        valid_bit[index] <= 0; 
-        dirty_bit[index] <= 0;
-      end
+      
     end
   end
 endmodule
