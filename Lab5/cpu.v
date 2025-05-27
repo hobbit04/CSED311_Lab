@@ -69,7 +69,7 @@ module cpu(input reset,       // positive reset signal
   wire is_output_valid;
   wire is_hit;
   wire stall_by_cache;
-  reg [31:0] hit_counter;
+  reg [31:0] cache_access_counter;
 
   /***** WB Stage wires *****/
   wire [31:0] writeback_data;
@@ -435,24 +435,25 @@ module cpu(input reset,       // positive reset signal
   );
   assign stall_by_cache = (EX_MEM_mem_read || EX_MEM_mem_write) && (!is_ready);
 
+  // the "is_hit" is naive; it registers hit for a miss-hit in a single instruction
 
-  reg [31:0] total_counter;
+  reg [31:0] tag_compare_counter;
   // ---------- Hit counter ----------
-  // hit_counter is a 32 bit register
+  // cache_access_counter is a 32 bit register
   always @(posedge clk) begin
     if (reset) begin
-      hit_counter <= 32'b0;
-      total_counter <= 32'b0;
+      cache_access_counter <= 32'b0;
+      tag_compare_counter <= 32'b0;
     end
     else if (is_output_valid) begin
-      total_counter <= total_counter + 1;
-      hit_counter <= hit_counter + {31'b0, is_hit};
+      tag_compare_counter <= tag_compare_counter + 1;
+      cache_access_counter <= cache_access_counter + {31'b0, is_hit};
     end
     if (!reset && EX_MEM_is_halted) begin
-      $display("total counter - %0d", total_counter);
-      $display("hit counter - %0d", hit_counter);
-      if (total_counter != 0) begin
-        $display("hit rate - %f", hit_counter * 1.0 / total_counter);
+      $display("total counter - %0d", cache_access_counter);
+      $display("hit counter - %0d", 2*cache_access_counter - tag_compare_counter);
+      if (tag_compare_counter != 0) begin
+        $display("hit rate - %f", (2*cache_access_counter - tag_compare_counter) * 1.0 / cache_access_counter);
       end
       else begin
         $display("cache was never accessed");
