@@ -1,7 +1,7 @@
 `include "CLOG2.v"
 module A_way_Cache #(parameter LINE_SIZE = 16,
-               parameter NUM_SETS = 4, /* 16 for direct-mapped, 4 for 4-way ~ */
-               parameter NUM_WAYS = 4 /* 1 for direct-mapped, 4 for 4-way ~ */) (
+               parameter NUM_SETS = 8, /* 16 for direct-mapped, 8 for 2-way ~ */
+               parameter NUM_WAYS = 2 /* 1 for direct-mapped, 2 for 2-way ~ */) (
     input reset,
     input clk,
 
@@ -18,15 +18,15 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
 
   // Local parameters declarations
   localparam OFFSET_BITS = `CLOG2(LINE_SIZE);  // 4
-  localparam INDEX_BITS = `CLOG2(NUM_SETS);  // 2
-  localparam TAG_BITS = 32 - OFFSET_BITS - INDEX_BITS;  // 26
+  localparam INDEX_BITS = `CLOG2(NUM_SETS);  // 3
+  localparam TAG_BITS = 32 - OFFSET_BITS - INDEX_BITS;  // 25
 
   localparam IDLE          = 0,  // states for FSM
              COMPARE_TAG   = 1,
              WRITEBACK     = 2,
              ALLOCATE      = 3;
 
-  localparam MAX_LRU_COUNT = (NUM_WAYS == 1) ? 1 : NUM_WAYS - 1;  // for a-way cache
+
 
   // Wire declarations
   wire is_data_mem_ready, is_data_mem_output_valid;
@@ -43,8 +43,7 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
   reg [LINE_SIZE*8-1:0] data_bank [NUM_SETS-1:0][NUM_WAYS-1:0];
   reg valid_bit [NUM_SETS-1:0][NUM_WAYS-1:0];
   reg dirty_bit [NUM_SETS-1:0][NUM_WAYS-1:0];
-
-  reg [`CLOG2(NUM_WAYS)-1:0] lru_counter [NUM_SETS-1:0][NUM_WAYS-1:0];  // for a-way
+  reg lru [NUM_SETS-1:0];  // for 2-way
 
   reg data_mem_is_input_valid, data_mem_read, data_mem_write;
   reg [31:0] data_mem_addr;
@@ -52,13 +51,9 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
   
   reg reg2cache, mem2cache, lru_update;  // cache control signals
 
-  reg [1:0] matching_way;  // for a-way
-
-  reg [`CLOG2(NUM_WAYS)-1:0] victim; // for a-way 
-  integer current_max_lru_cnt;
-  
+  reg matching_way;  // for 2-way
+  assign matching_way = (tag_bank[index][1] == tag);
   integer i, j;
-  reg flag;  // for breaking the for-loop
 
   assign is_ready = (next_state == IDLE); 
   assign is_output_valid = (state == COMPARE_TAG);
@@ -82,19 +77,6 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
     // is data memory ready to accept request?
     .mem_ready(is_data_mem_ready)
   );
-
-  // Find matching way for a-way
-  always @(*) begin
-    matching_way = 0;
-    if(tag_bank[index][0] == tag && valid_bit[index][0])
-      matching_way = 2'b00;  // if there is a hit, set matching_way to the hit way
-    else if(tag_bank[index][1] == tag && valid_bit[index][1])
-      matching_way = 2'b01;
-    else if(tag_bank[index][2] == tag && valid_bit[index][2])
-      matching_way = 2'b10;
-    else if(tag_bank[index][3] == tag && valid_bit[index][3])
-      matching_way = 2'b11;
-  end
 
   // ---------- State transition ----------
   always @(posedge clk) begin
@@ -120,7 +102,7 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
         if(is_hit) begin
           next_state = IDLE;
         end
-        else if(dirty_bit[index][matching_way]) begin 
+        else if(dirty_bit[index][lru[index]]) begin 
           next_state = WRITEBACK;
         end
         else begin
@@ -156,13 +138,18 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
     data_mem_read = 0;
     data_mem_write = 0;
     data_mem_din = 0;
+
+    lru_update = 0;
+    reg2cache = 0;
+    mem2cache = 0;
     case(state)
       IDLE: begin
       end
       COMPARE_TAG: begin
-
         if(is_hit) begin
-          lru_update = 1;
+          if(lru[index] == matching_way) begin
+            lru_update = 1;
+          end
 
           if(mem_write) begin
             reg2cache = 1;  // data mem -> cache
@@ -176,8 +163,8 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
           end
           else if(next_state == WRITEBACK) begin
             data_mem_is_input_valid = 1;
-            data_mem_addr = {tag_bank[index][matching_way], index, 4'b0000}; // write back the dirty block
-            data_mem_din = data_bank[index][matching_way];
+            data_mem_addr = {tag_bank[index][lru[index]], index, 4'b0000}; // write back the dirty block
+            data_mem_din = data_bank[index][lru[index]];
             data_mem_write = 1;
           end
         end
@@ -187,13 +174,23 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
           data_mem_is_input_valid = 1;
           data_mem_read = 1;
           data_mem_addr = addr; // write back the dirty block
-          data_mem_din = data_bank[index][matching_way];
         end
       end
       ALLOCATE: begin
-        if(is_data_mem_ready) begin
+        if(is_data_mem_output_valid) begin
           mem2cache = 1;  // data mem -> cache
+          // lru_update = 1;
         end
+      end
+      default: begin
+        data_mem_is_input_valid = 0;
+        data_mem_addr = 0;
+        data_mem_read = 0;
+        data_mem_write = 0;
+        data_mem_din = 0;
+        lru_update = 0;
+        reg2cache = 0;
+        mem2cache = 0;
       end
     endcase
   end
@@ -207,89 +204,24 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
           data_bank[i][j] <= 0;
           valid_bit[i][j] <= 0;
           dirty_bit[i][j] <= 0;
-          lru_counter[i][j] <= 0;
         end
+        lru[i] <= 0;
       end
     end
     else begin
       if(lru_update) begin
-        // update lru_counter for a-way
-        for(i = 0; i < NUM_WAYS; i = i + 1) begin
-          if(i == matching_way) begin
-            lru_counter[index][i] <= 0;
-          end
-          else begin
-            lru_counter[index][i] <= lru_counter[index][i] < MAX_LRU_COUNT ? lru_counter[index][i] + 1 : MAX_LRU_COUNT;
-          end
-        end
+        lru[index] <= ~lru[index];  
       end
       if(reg2cache) begin
         data_bank[index][matching_way][ offset[3:2]*32 +: 32 ] <= din;
         dirty_bit[index][matching_way] <= 1;  
       end
       if(mem2cache) begin
-        data_bank[index][matching_way] <= data_mem_dout;
-        tag_bank[index][matching_way] <= tag;
-        valid_bit[index][matching_way] <= 1;
-        dirty_bit[index][matching_way] <= 0;  
+        data_bank[index][lru[index]] <= data_mem_dout;
+        tag_bank[index][lru[index]] <= tag;
+        valid_bit[index][lru[index]] <= 1;
+        dirty_bit[index][lru[index]] <= 0;  
       end
-
-      // case(state)
-      //   IDLE: begin
-      //     // no need to do anything about cache
-      //   end
-      //   COMPARE_TAG: begin
-      //     // todo: if is_hit, pass the data to the output
-      //     if(is_hit) begin
-
-      //       // // todo: update lru_counter for a-way
-      //       // for(i = 0; i < NUM_WAYS; i = i + 1) begin
-      //       //   if(i == matching_way) begin
-      //       //     lru_counter[index][i] <= 0;
-      //       //   end
-      //       //   else begin
-      //       //     lru_counter[index][i] <= lru_counter[index][i] < MAX_LRU_COUNT ? lru_counter[index][i] + 1 : MAX_LRU_COUNT;
-      //       //   end
-      //       // end
-      //       // if you modify cache, set dirty_bit = 1
-      //       if(mem_write) begin
-      //         data_bank[index][matching_way][offset[3:2]*32 +: 32] <= din;  // write data to the cache
-      //         dirty_bit[index][matching_way] <= 1;  // if miss-write, set dirty bit
-      //       end
-      //     end         
-      //   end
-      //   WRITEBACK: begin
-      //     if(is_data_mem_ready) begin
-      //       tag_bank[index][matching_way] <= 0;
-      //       valid_bit[index][matching_way] <= 0;
-      //       dirty_bit[index][matching_way] <= 0;
-      //       data_bank[index][matching_way] <= 0;
-      //     end
-      //   end
-      //   ALLOCATE: begin
-      //     // todo: find a victim way
-      //     victim <= 0;  // for direct-mapped, victim is always 0
-      //     // current_max_lru_cnt <= 0;  // for a-way, find maximum lru value block and set it as victim
-      //     // flag <= 0;
-      //     // for(i=0; i<NUM_WAYS; i=i+1) begin
-      //     //   if(!valid_bit[index][i]) begin
-      //     //     victim <= i;  // if there is an empty way, use it as victim
-      //     //     flag <= 1;
-      //     //   end
-      //     //   else if(!flag && lru_counter[index][i] > current_max_lru_cnt) begin
-      //     //     victim <= i;  // if all ways are valid, use the least recently used way as victim
-      //     //     current_max_lru_cnt <= lru_counter[index][i];
-      //     //   end
-      //     // end
-      //     if(is_data_mem_ready) begin
-      //       data_bank[index][victim] <= data_mem_dout;
-      //       tag_bank[index][victim] <= tag;
-      //       valid_bit[index][victim] <= 1;
-      //       dirty_bit[index][victim] <= 0;
-      //       lru_counter[index][victim] <= 0;
-      //     end
-      //   end
-      // endcase
     end
   end
 endmodule

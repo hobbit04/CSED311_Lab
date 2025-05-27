@@ -419,7 +419,7 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Cache & Data Memory ----------
   // (Data Memory module is inside of Cache module)
-  DirMapCache cache(
+  A_way_Cache cache(
     .reset(reset),                            // input
     .clk(clk),                                // input
     .addr(EX_MEM_alu_out),                    // input

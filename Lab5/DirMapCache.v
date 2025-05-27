@@ -112,10 +112,8 @@ module DirMapCache #(parameter LINE_SIZE = 16,
           data_mem_is_input_valid = 1;
           data_mem_read = 1;
           data_mem_addr = addr; // write back the dirty block
-          data_mem_din = data_bank[index];
         end
 
-        
         if(is_data_mem_ready) begin
           clearCache = 1;
         end
