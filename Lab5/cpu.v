@@ -448,6 +448,18 @@ module cpu(input reset,       // positive reset signal
       total_counter <= total_counter + 1;
       hit_counter <= hit_counter + {31'b0, is_hit};
     end
+    if (!reset && EX_MEM_is_halted) begin
+      $display("total counter - %0d", total_counter);
+      $display("hit counter - %0d", hit_counter);
+      if (total_counter != 0) begin
+        $display("hit rate - %f", hit_counter * 1.0 / total_counter);
+      end
+      else begin
+        $display("cache was never accessed");
+      end
+    end
+
+
   end
 
   // Update MEM/WB pipeline registers here
