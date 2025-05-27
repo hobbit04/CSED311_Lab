@@ -55,8 +55,8 @@ module A_way_Cache #(parameter LINE_SIZE = 16,
   assign matching_way = (tag_bank[index][1] == tag);
   integer i, j;
 
-  assign is_ready = (next_state == IDLE); 
-  assign is_output_valid = (state == COMPARE_TAG && is_hit);
+  assign is_ready = (state == COMPARE_TAG && is_hit); 
+  assign is_output_valid = (state == COMPARE_TAG);
   assign dout = data_bank[index][matching_way][offset[3:2]*32 +: 32];  
   assign is_hit = (valid_bit[index][matching_way] && tag_bank[index][matching_way] == tag);
 

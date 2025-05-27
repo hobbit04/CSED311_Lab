@@ -50,8 +50,8 @@ module DirMapCache #(parameter LINE_SIZE = 16,
  
   integer i, j;
 
-  assign is_ready = (next_state == IDLE); 
-  assign is_output_valid = (state == COMPARE_TAG && is_hit);
+  assign is_ready = (state == COMPARE_TAG && is_hit);
+  assign is_output_valid = (state == COMPARE_TAG);
   assign dout = data_bank[index][offset[3:2]*32 +: 32];  
   assign is_hit = (valid_bit[index] && tag_bank[index] == tag);
 

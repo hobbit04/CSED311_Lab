@@ -419,7 +419,7 @@ module cpu(input reset,       // positive reset signal
 
   // ---------- Cache & Data Memory ----------
   // (Data Memory module is inside of Cache module)
-  A_way_Cache cache(
+  DirMapCache cache(
     .reset(reset),                            // input
     .clk(clk),                                // input
     .addr(EX_MEM_alu_out),                    // input
@@ -433,16 +433,19 @@ module cpu(input reset,       // positive reset signal
     .is_output_valid(is_output_valid),        // output (control for cache)
     .is_hit(is_hit)                           // output (control for cache)
   );
-  assign stall_by_cache = (EX_MEM_mem_read || EX_MEM_mem_write) && (!is_output_valid);
+  assign stall_by_cache = (EX_MEM_mem_read || EX_MEM_mem_write) && (!is_ready);
 
 
+  reg [31:0] total_counter;
   // ---------- Hit counter ----------
   // hit_counter is a 32 bit register
   always @(posedge clk) begin
     if (reset) begin
       hit_counter <= 32'b0;
+      total_counter <= 32'b0;
     end
     else if (is_output_valid) begin
+      total_counter <= total_counter + 1;
       hit_counter <= hit_counter + {31'b0, is_hit};
     end
   end
